@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet"><style>body{margin:0;background:#eceef1;font-family:Roboto,system-ui,sans-serif}a{color:#2166D1}a:hover{color:#174A9C}*{box-sizing:border-box}input,textarea,button{font-family:inherit}.ms{font-family:'Material Symbols Outlined';font-weight:400;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}@keyframes pulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.9);opacity:0}100%{transform:scale(1.9);opacity:0}}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}</style></helmet>
+<div style="display:flex;gap:32px;padding:32px;align-items:flex-start">
+<div style="width:228px;flex:none;position:sticky;top:32px">
+<div style="font:700 15px/1.25 Roboto;color:#101828;letter-spacing:-.2px">AILex — V1 prototype</div>
+<div style="font:400 12px/1.5 Roboto;color:#667085;margin:6px 0 18px">Mumbai Legal Rights AI. Tap through the phone, or jump to any screen.</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ index }}" as="it" hint-placeholder-count="14">
+<sc-if value="{{ it.isGroup }}" hint-placeholder-val="{{ false }}"><div style="font:500 10px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3;margin:14px 0 5px">{{ it.label }}</div></sc-if>
+<sc-if value="{{ it.active }}" hint-placeholder-val="{{ false }}"><button onClick="{{ it.go }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid #D6E4FB;background:#EAF2FF;color:#174A9C;font:500 12.5px/1.35 Roboto;padding:7px 10px;border-radius:8px;cursor:pointer"><span style="width:4px;height:4px;border-radius:9px;background:#2166D1;flex:none"></span>{{ it.label }}</button></sc-if>
+<sc-if value="{{ it.idle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ it.go }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid transparent;background:none;color:#475467;font:400 12.5px/1.35 Roboto;padding:7px 10px;border-radius:8px;cursor:pointer" style-hover="background:#fff;color:#101828"><span style="width:4px;height:4px;border-radius:9px;background:#D0D5DD;flex:none"></span>{{ it.label }}</button></sc-if>
+</sc-for>
+</div>
+<div style="margin-top:20px;padding:11px 12px;border:1px solid #EAECF0;border-radius:10px;background:#F8FAFC;font:400 11px/1.5 Roboto;color:#667085">Legal text is illustrative demo content for layout review, not verified guidance.</div>
+</div>
+
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="412px,892px">
+<div style="display:flex;flex-direction:column;min-height:100%;background:#F8FAFC;position:relative">
+<div style="flex:1;display:flex;flex-direction:column">
+
+<sc-if value="{{ is.welcome }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:44px 24px 24px;background:#fff">
+<div style="width:56px;height:64px;background:#102A56;clip-path:polygon(50% 0,100% 16%,100% 62%,50% 100%,0 62%,0 16%);display:flex;align-items:center;justify-content:center;margin-bottom:32px"><span class="ms" style="font-size:28px;color:#fff">balance</span></div>
+<h1 style="font:700 30px/1.2 Roboto;color:#102A56;margin:0 0 14px;letter-spacing:-.5px;text-wrap:pretty">Legal first-aid for everyday situations.</h1>
+<p style="font:400 16px/1.5 Roboto;color:#475467;margin:0">Tell us what happened. Understand what may apply and what to do next.</p>
+<div style="flex:1"></div>
+<div style="display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #EAECF0;border-radius:16px;background:#F8FAFC;margin-bottom:20px">
+<sc-for list="{{ welcomePoints }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;gap:10px;align-items:flex-start"><span class="ms" style="font-size:18px;color:#2C9C96;flex:none">check_circle</span><span style="font:400 14px/1.45 Roboto;color:#344054">{{ p }}</span></div>
+</sc-for>
+</div>
+<button onClick="{{ goPhone }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Continue with mobile number</button>
+<p style="font:400 12px/1.45 Roboto;color:#667085;margin:14px 0 0;text-align:center">We never ask for OTPs, PINs, passwords or CVVs in chat.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.phone }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#fff">
+<button onClick="{{ goWelcome }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<h1 style="font:700 26px/1.2 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">What's your mobile number?</h1>
+<p style="font:400 14px/1.45 Roboto;color:#667085;margin:0 0 28px">We'll send a six-digit code to verify it. This is the only number we store.</p>
+<div style="display:flex;gap:10px;align-items:stretch">
+<div style="display:flex;align-items:center;gap:6px;padding:0 14px;height:56px;border:1px solid #D0D5DD;border-radius:12px;background:#F8FAFC;font:500 16px Roboto;color:#344054;flex:none">+91</div>
+<input value="{{ phone }}" onChange="{{ onPhone }}" placeholder="98765 43210" inputmode="numeric" style="flex:1;height:56px;border:1px solid #D0D5DD;border-radius:12px;padding:0 14px;font:400 17px Roboto;color:#101828;outline:none;letter-spacing:.5px" style-focus="border-color:#2166D1;box-shadow:0 0 0 3px #EAF2FF">
+</div>
+<div style="flex:1"></div>
+<sc-if value="{{ phoneValid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goOtp }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Send code</button></sc-if>
+<sc-if value="{{ phoneInvalid }}" hint-placeholder-val="{{ true }}"><button disabled style="height:52px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 15px Roboto;width:100%;cursor:not-allowed">Send code</button></sc-if>
+<p style="font:400 12px/1.45 Roboto;color:#667085;margin:14px 0 0;text-align:center">India only in this release. No Aadhaar, address or date of birth is collected.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.otp }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#fff">
+<button onClick="{{ goPhone }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<h1 style="font:700 26px/1.2 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">Enter the code</h1>
+<p style="font:400 14px/1.45 Roboto;color:#667085;margin:0 0 28px">Sent to {{ maskedPhone }} · <button onClick="{{ goPhone }}" style="border:none;background:none;padding:0;color:#2166D1;font:500 14px Roboto;cursor:pointer;text-decoration:underline">change</button></p>
+<div style="display:flex;gap:8px">
+<sc-for list="{{ otpCells }}" as="c" hint-placeholder-count="6">
+<div style="flex:1;height:60px;border:1px solid #D0D5DD;border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 22px Roboto;color:#101828;background:#F8FAFC">{{ c.char }}</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+<span style="font:400 13px Roboto;color:#667085">Resend in 0:24</span>
+<button onClick="{{ fillOtp }}" style="border:1px solid #D6E4FB;background:#EAF2FF;color:#174A9C;font:500 12.5px Roboto;padding:7px 11px;border-radius:8px;cursor:pointer">Autofill demo code</button>
+</div>
+<div style="flex:1"></div>
+<sc-if value="{{ otpValid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goName }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Verify</button></sc-if>
+<sc-if value="{{ otpInvalid }}" hint-placeholder-val="{{ true }}"><button disabled style="height:52px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 15px Roboto;width:100%;cursor:not-allowed">Verify</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.name }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#fff">
+<button onClick="{{ goOtp }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px"><span class="ms" style="font-size:18px;color:#2E9B52">verified</span><span style="font:500 13px Roboto;color:#18733A">Number verified</span></div>
+<h1 style="font:700 26px/1.2 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">What should we call you?</h1>
+<p style="font:400 14px/1.45 Roboto;color:#667085;margin:0 0 28px">Used only to address you in the app.</p>
+<input value="{{ name }}" onChange="{{ onName }}" placeholder="Your name" style="height:56px;border:1px solid #D0D5DD;border-radius:12px;padding:0 14px;font:400 17px Roboto;color:#101828;outline:none" style-focus="border-color:#2166D1;box-shadow:0 0 0 3px #EAF2FF">
+<div style="flex:1"></div>
+<sc-if value="{{ nameValid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goLanguage }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Continue</button></sc-if>
+<sc-if value="{{ nameInvalid }}" hint-placeholder-val="{{ true }}"><button disabled style="height:52px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 15px Roboto;width:100%;cursor:not-allowed">Continue</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.language }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#fff">
+<button onClick="{{ goName }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<h1 style="font:700 26px/1.2 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">Preferred language</h1>
+<p style="font:400 14px/1.45 Roboto;color:#667085;margin:0 0 24px">Affects explanations and voice. It does not change which laws are covered.</p>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ languages }}" as="l" hint-placeholder-count="3">
+<button onClick="{{ l.pick }}" style="display:flex;align-items:center;gap:12px;text-align:left;padding:16px;border-radius:14px;cursor:pointer;border:1px solid {{ l.border }};background:{{ l.bg }}">
+<span class="ms" style="font-size:22px;color:#2166D1">{{ l.icon }}</span>
+<span style="flex:1"><span style="display:block;font:700 16px/1.3 Roboto;color:#101828">{{ l.label }}</span><span style="display:block;font:400 13px/1.4 Roboto;color:#667085;margin-top:2px">{{ l.native }}</span></span>
+</button>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ goHome }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Finish setup</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.home }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;padding:14px 20px 20px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+<div>
+<div style="font:700 22px/1.2 Roboto;color:#102A56;letter-spacing:-.3px">Hello, {{ firstName }}</div>
+<button onClick="{{ openCoverage }}" style="display:flex;align-items:center;gap:4px;border:none;background:none;padding:4px 0 0;cursor:pointer;color:#667085;font:400 13px Roboto"><span class="ms" style="font-size:15px">place</span>Mumbai / MMR<span class="ms" style="font-size:15px">info</span></button>
+</div>
+<button onClick="{{ goNotifications }}" style="position:relative;width:44px;height:44px;border:1px solid #EAECF0;border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054" style-hover="background:#F2F4F7"><span class="ms" style="font-size:21px">notifications</span><sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#D92D20;color:#fff;font:700 10px/16px Roboto;text-align:center">{{ unreadCount }}</span></sc-if></button>
+</div>
+
+<div style="border:1px solid #FBD9D2;background:#FFF7F4;border-radius:20px;padding:20px;margin-bottom:24px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="ms" style="font-size:20px;color:#B42318">emergency_home</span><span style="font:500 11px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#B42318">Live help</span></div>
+<div style="font:700 22px/1.25 Roboto;color:#8F1717;letter-spacing:-.3px;margin-bottom:6px">Something happening right now?</div>
+<div style="font:400 14px/1.5 Roboto;color:#475467;margin-bottom:16px">Get step-by-step help for your situation.</div>
+<button onClick="{{ startLive }}" style="height:52px;width:100%;border:none;border-radius:12px;background:#D92D20;color:#fff;font:700 15px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#B42318"><span class="ms" style="font-size:20px">bolt</span>Start live help</button>
+<div style="display:flex;gap:6px;margin-top:14px">
+<sc-for list="{{ urgentCues }}" as="c" hint-placeholder-count="3">
+<span style="flex:1;text-align:center;font:500 11.5px/1.3 Roboto;color:#8F1717;background:#FDECEC;border-radius:999px;padding:6px 4px">{{ c }}</span>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+<span style="font:700 18px/1.2 Roboto;color:#101828">Browse by area</span>
+<span style="font:400 12px Roboto;color:#667085">5 areas covered</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+<sc-for list="{{ domains }}" as="d" hint-placeholder-count="5">
+<button onClick="{{ d.go }}" style="grid-column:{{ d.span }};display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:14px;cursor:pointer" style-hover="border-color:#D6E4FB;background:#F5F8FF">
+<span style="width:40px;height:40px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ d.tint }}"><span class="ms" style="font-size:21px;color:{{ d.ink }}">{{ d.icon }}</span></span>
+<span style="min-width:0"><span style="display:block;font:700 15px/1.25 Roboto;color:#101828">{{ d.label }}</span><span style="display:block;font:400 12px/1.35 Roboto;color:#667085;margin-top:2px">{{ d.blurb }}</span></span>
+</button>
+</sc-for>
+</div>
+
+<button onClick="{{ goAsk }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#F5F8FF;border:1px solid #D6E4FB;border-radius:16px;padding:15px;cursor:pointer;margin-bottom:24px" style-hover="background:#EAF2FF">
+<span class="ms" style="font-size:22px;color:#2166D1">forum</span>
+<span style="flex:1"><span style="display:block;font:700 15px/1.25 Roboto;color:#102A56">Ask Legal AI</span><span style="display:block;font:400 12.5px/1.4 Roboto;color:#475467;margin-top:2px">Type or speak a question. English, हिंदी or मराठी.</span></span>
+<span class="ms" style="font-size:20px;color:#2166D1">chevron_right</span>
+</button>
+
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+<span style="font:700 18px/1.2 Roboto;color:#101828">Recent incidents</span>
+<button onClick="{{ goIncidents }}" style="border:none;background:none;padding:0;color:#2166D1;font:500 13px Roboto;cursor:pointer">See all</button>
+</div>
+<sc-if value="{{ noRecent }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px dashed #D0D5DD;border-radius:14px;padding:18px;text-align:center;font:400 13.5px/1.5 Roboto;color:#667085">Nothing saved yet. Situations appear here only when you choose to save them.</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ recent }}" as="r" hint-placeholder-count="2">
+<button onClick="{{ r.go }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:13px;cursor:pointer" style-hover="border-color:#D0D5DD">
+<span style="width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ r.tint }}"><span class="ms" style="font-size:18px;color:{{ r.ink }}">{{ r.icon }}</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 14px/1.3 Roboto;color:#101828;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</span><span style="display:block;font:400 12px/1.35 Roboto;color:#667085;margin-top:2px">{{ r.meta }}</span></span>
+<span class="ms" style="font-size:18px;color:#98A2B3">chevron_right</span>
+</button>
+</sc-for>
+</div>
+<p style="font:400 12px/1.45 Roboto;color:#667085;margin:12px 0 0;display:flex;gap:6px;align-items:flex-start"><span class="ms" style="font-size:15px;color:#2C9C96">lock</span>You decide what becomes an incident. Conversations are not saved on their own.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.lsSafety }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#FFF7F4">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+<button onClick="{{ goHome }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054"><span class="ms" style="font-size:24px">close</span></button>
+<span style="font:500 13px Roboto;color:#8F1717">Live help</span>
+<span style="width:44px"></span>
+</div>
+<h1 style="font:700 26px/1.25 Roboto;color:#8F1717;margin:0 0 10px;letter-spacing:-.3px">First — is anyone in immediate danger?</h1>
+<p style="font:400 15px/1.5 Roboto;color:#475467;margin:0 0 26px">I'll only ask the details that may change the guidance. Answer this one first so I can put safety ahead of paperwork.</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+<button onClick="{{ goCategory }}" style="display:flex;align-items:center;gap:14px;text-align:left;padding:18px;border:1px solid #EAECF0;background:#fff;border-radius:16px;cursor:pointer" style-hover="border-color:#D0D5DD">
+<span class="ms" style="font-size:24px;color:#2E9B52">shield_with_heart</span>
+<span><span style="display:block;font:700 16px/1.3 Roboto;color:#101828">I am safe right now</span><span style="display:block;font:400 13px/1.4 Roboto;color:#667085;margin-top:3px">Continue with the situation</span></span>
+</button>
+<button onClick="{{ goUrgent }}" style="display:flex;align-items:center;gap:14px;text-align:left;padding:18px;border:1px solid #FBD9D2;background:#FDECEC;border-radius:16px;cursor:pointer" style-hover="border-color:#F2B8AE">
+<span class="ms" style="font-size:24px;color:#B42318">sos</span>
+<span><span style="display:block;font:700 16px/1.3 Roboto;color:#8F1717">I need urgent help</span><span style="display:block;font:400 13px/1.4 Roboto;color:#B42318;margin-top:3px">Show emergency numbers first</span></span>
+</button>
+</div>
+<div style="flex:1"></div>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:14px;padding:14px;display:flex;gap:10px;align-items:flex-start">
+<span class="ms" style="font-size:19px;color:#667085;flex:none">info</span>
+<span style="font:400 13px/1.5 Roboto;color:#475467">This is legal first-aid, not legal representation. In an emergency, call 112 before using the app.</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.lsUrgent }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#FFF7F4">
+<button onClick="{{ goSafety }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<div style="border:1px solid #F2B8AE;background:#FDECEC;border-radius:16px;padding:16px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="ms" style="font-size:20px;color:#B42318">health_and_safety</span><span style="font:700 13px/1 Roboto;letter-spacing:.06em;text-transform:uppercase;color:#B42318">Safety first</span></div>
+<div style="font:400 14px/1.5 Roboto;color:#8F1717">Get to a safe, public, well-lit place if you can. Do not physically resist or argue. Call for help before working out the legal position.</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+<sc-for list="{{ emergency }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:14px">
+<span style="width:38px;height:38px;border-radius:11px;background:#FDECEC;flex:none;display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:20px;color:#B42318">{{ e.icon }}</span></span>
+<span style="flex:1"><span style="display:block;font:700 15px/1.25 Roboto;color:#101828">{{ e.label }}</span><span style="display:block;font:400 12.5px/1.35 Roboto;color:#667085;margin-top:2px">{{ e.blurb }}</span></span>
+<span style="font:700 18px Roboto;color:#B42318">{{ e.number }}</span>
+</div>
+</sc-for>
+</div>
+<button onClick="{{ goCategory }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">I'm safe now — continue</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.lsCategory }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px">
+<button onClick="{{ goSafety }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<h1 style="font:700 26px/1.25 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">What kind of situation is it?</h1>
+<p style="font:400 14px/1.45 Roboto;color:#667085;margin:0 0 22px">Pick the closest one. You can correct me later.</p>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ liveCats }}" as="c" hint-placeholder-count="6">
+<button onClick="{{ c.pick }}" style="display:flex;align-items:center;gap:13px;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:15px;cursor:pointer" style-hover="border-color:#D6E4FB;background:#F5F8FF">
+<span style="width:40px;height:40px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ c.tint }}"><span class="ms" style="font-size:21px;color:{{ c.ink }}">{{ c.icon }}</span></span>
+<span style="flex:1"><span style="display:block;font:700 16px/1.25 Roboto;color:#101828">{{ c.label }}</span><span style="display:block;font:400 12.5px/1.4 Roboto;color:#667085;margin-top:2px">{{ c.blurb }}</span></span>
+<span class="ms" style="font-size:20px;color:#98A2B3">chevron_right</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.lsQuestion }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+<button onClick="{{ qBack }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;flex:none"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<div style="flex:1;height:6px;border-radius:99px;background:#EAECF0;overflow:hidden"><div style="height:6px;border-radius:99px;background:#2166D1;width:{{ qProgress }}"></div></div>
+<span style="font:500 12px Roboto;color:#667085;flex:none">{{ qCounter }}</span>
+</div>
+<div style="display:inline-flex;align-self:flex-start;align-items:center;gap:6px;background:{{ qTint }};border-radius:999px;padding:6px 12px;margin-bottom:16px"><span class="ms" style="font-size:16px;color:{{ qInk }}">{{ qIcon }}</span><span style="font:500 12.5px Roboto;color:{{ qInk }}">{{ qCatLabel }}</span></div>
+<h1 style="font:700 24px/1.3 Roboto;color:#101828;margin:0 0 8px;letter-spacing:-.2px;text-wrap:pretty">{{ qText }}</h1>
+<p style="font:400 13.5px/1.45 Roboto;color:#667085;margin:0 0 20px">{{ qWhy }}</p>
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ qOptions }}" as="o" hint-placeholder-count="4">
+<button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:11px;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:15px;cursor:pointer;font:400 15px/1.35 Roboto;color:#101828" style-hover="border-color:#2166D1;background:#F5F8FF">
+<span style="width:20px;height:20px;border-radius:99px;border:2px solid #D0D5DD;flex:none"></span>{{ o.label }}
+</button>
+</sc-for>
+</div>
+<button onClick="{{ qSkip }}" style="align-self:flex-start;margin-top:16px;border:none;background:none;padding:8px 0;color:#2166D1;font:500 13.5px Roboto;cursor:pointer">Type an answer instead</button>
+<div style="flex:1"></div>
+<div style="display:flex;gap:9px;align-items:flex-start;padding:12px 13px;border:1px solid #EAECF0;background:#F8FAFC;border-radius:12px">
+<span class="ms" style="font-size:17px;color:#667085;flex:none">visibility_off</span>
+<span style="font:400 12.5px/1.45 Roboto;color:#475467">I won't ask for your name, licence number or vehicle number unless it changes the answer.</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.lsResult }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goCategory }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ res.title }}</span>
+<button onClick="{{ toggleSpeak }}" style="width:40px;height:40px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2166D1;flex:none" style-hover="background:#F5F8FF"><span class="ms" style="font-size:20px">{{ speakIcon }}</span></button>
+</div>
+<div style="padding:16px 20px 24px">
+
+<sc-if value="{{ res.highRisk }}" hint-placeholder-val="{{ true }}">
+<div style="border:1px solid #F2B8AE;background:#FDECEC;border-radius:14px;padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+<span class="ms" style="font-size:20px;color:#B42318;flex:none">health_and_safety</span>
+<span><span style="display:block;font:700 13px/1 Roboto;letter-spacing:.06em;text-transform:uppercase;color:#B42318;margin-bottom:5px">Safety first</span><span style="display:block;font:400 13.5px/1.5 Roboto;color:#8F1717">{{ res.safety }}</span></span>
+</div>
+</sc-if>
+
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;padding:15px;margin-bottom:18px">
+<div style="font:500 10.5px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3;margin-bottom:8px">What I understand</div>
+<div style="font:400 14.5px/1.5 Roboto;color:#344054;margin-bottom:12px">{{ res.situation }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ res.facts }}" as="f" hint-placeholder-count="3">
+<span style="font:400 12px/1.3 Roboto;color:#344054;background:#F2F4F7;border-radius:999px;padding:5px 10px">{{ f }}</span>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span class="ms" style="font-size:20px;color:#2166D1">checklist</span>
+<span style="font:700 19px/1.2 Roboto;color:#101828">What to do now</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px">
+<sc-for list="{{ res.steps }}" as="s" hint-placeholder-count="5">
+<button onClick="{{ s.toggle }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;background:{{ s.bg }};border:1px solid {{ s.border }};border-radius:14px;padding:14px;cursor:pointer;width:100%">
+<span style="width:24px;height:24px;border-radius:99px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ s.numBg }};color:{{ s.numInk }};font:700 12.5px Roboto">{{ s.badge }}</span>
+<span style="flex:1"><span style="display:block;font:500 14.5px/1.5 Roboto;color:{{ s.ink }}">{{ s.text }}</span><sc-if value="{{ s.note }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:400 12.5px/1.45 Roboto;color:#667085;margin-top:5px">{{ s.note }}</span></sc-if></span>
+</button>
+</sc-for>
+</div>
+<div style="font:400 12.5px/1.45 Roboto;color:#667085;margin-bottom:22px">Tap a step to mark it done. {{ res.doneLabel }}</div>
+
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+<sc-for list="{{ res.sections }}" as="sec" hint-placeholder-count="7">
+<div style="border:1px solid {{ sec.border }};background:#fff;border-radius:14px;overflow:hidden">
+<button onClick="{{ sec.toggle }}" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:{{ sec.headBg }};padding:14px;cursor:pointer">
+<span class="ms" style="font-size:20px;color:{{ sec.ink }};flex:none">{{ sec.icon }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:700 15px/1.25 Roboto;color:#101828">{{ sec.title }}</span><span style="display:block;font:400 12px/1.35 Roboto;color:#667085;margin-top:2px">{{ sec.meta }}</span></span>
+<span class="ms" style="font-size:22px;color:#667085;flex:none">{{ sec.chevron }}</span>
+</button>
+<sc-if value="{{ sec.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:2px 15px 15px;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ sec.items }}" as="i" hint-placeholder-count="3">
+<div style="display:flex;gap:9px;align-items:flex-start">
+<span class="ms" style="font-size:17px;color:{{ i.ink }};flex:none;margin-top:1px">{{ i.icon }}</span>
+<span style="font:400 13.5px/1.5 Roboto;color:#344054">{{ i.text }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ sec.hasSources }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ sec.sources }}" as="src" hint-placeholder-count="2">
+<div style="border:1px solid #EAECF0;background:#F8FAFC;border-radius:12px;padding:12px">
+<div style="font:700 13.5px/1.35 Roboto;color:#102A56;margin-bottom:6px">{{ src.title }}</div>
+<div style="font:400 12.5px/1.5 Roboto;color:#475467;margin-bottom:9px">{{ src.excerpt }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px Roboto;color:#18733A;background:#EAF7EE;border-radius:999px;padding:4px 8px"><span class="ms" style="font-size:13px">verified</span>{{ src.status }}</span>
+<span style="font:400 11px Roboto;color:#667085">{{ src.meta }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ sec.caveat }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:8px;align-items:flex-start;background:#FFF6E4;border:1px solid #FFE7B8;border-radius:11px;padding:11px">
+<span class="ms" style="font-size:16px;color:#9A5B00;flex:none">help</span>
+<span style="font:400 12.5px/1.45 Roboto;color:#9A5B00">{{ sec.caveat }}</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+<button onClick="{{ goEscalation }}" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#F5F8FF;border:1px solid #D6E4FB;border-radius:14px;padding:15px;cursor:pointer" style-hover="background:#EAF2FF">
+<span class="ms" style="font-size:21px;color:#2166D1">alt_route</span>
+<span style="flex:1"><span style="display:block;font:700 15px/1.25 Roboto;color:#102A56">Where to escalate</span><span style="display:block;font:400 12.5px/1.35 Roboto;color:#475467;margin-top:2px">{{ res.escalationBlurb }}</span></span>
+<span class="ms" style="font-size:20px;color:#2166D1">chevron_right</span>
+</button>
+<button onClick="{{ openSave }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#174A9C"><span class="ms" style="font-size:20px">bookmark_add</span>Save this situation</button>
+</div>
+
+<div style="border-top:1px solid #EAECF0;padding-top:16px">
+<div style="font:500 14px Roboto;color:#344054;margin-bottom:10px">Was this useful?</div>
+<div style="display:flex;gap:8px">
+<button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;font:500 13.5px Roboto;color:#344054" style-hover="border-color:#2E9B52;color:#18733A"><span class="ms" style="font-size:18px">thumb_up</span>Yes</button>
+<button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;font:500 13.5px Roboto;color:#344054" style-hover="border-color:#D0D5DD"><span class="ms" style="font-size:18px">thumb_down</span>No</button>
+<button style="flex:none;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 13px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;font:500 13.5px Roboto;color:#B42318" style-hover="border-color:#F2B8AE;background:#FDECEC"><span class="ms" style="font-size:18px">flag</span>Incorrect</button>
+</div>
+<p style="font:400 11.5px/1.5 Roboto;color:#98A2B3;margin:14px 0 0">AILex gives legal first-aid based on verified sources. It is not a lawyer and does not guarantee any outcome.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.ask }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="padding:14px 20px 0">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+<div><div style="font:700 22px/1.2 Roboto;color:#102A56;letter-spacing:-.3px">Ask Legal AI</div>
+<div style="font:400 13.5px/1.45 Roboto;color:#667085;margin-top:3px">Clear, practical guidance for your situation.</div></div>
+<button onClick="{{ goIncidents }}" style="width:44px;height:44px;border:1px solid #EAECF0;border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none" style-hover="background:#F2F4F7"><span class="ms" style="font-size:21px">folder_open</span></button>
+</div>
+<div style="border:1px solid #D6E4FB;background:#F5F8FF;border-radius:16px;padding:15px;margin:18px 0 22px">
+<div style="font:400 14px/1.55 Roboto;color:#344054;margin-bottom:10px">Ask about anything involving police, traffic, Mumbai railways, government services or cyber incidents.</div>
+<div style="display:flex;gap:8px;align-items:flex-start"><span class="ms" style="font-size:17px;color:#2166D1;flex:none">psychology</span><span style="font:400 12.5px/1.45 Roboto;color:#475467">I'll ask only the facts that change the answer, not your whole life story.</span></div>
+</div>
+<div style="font:700 15px/1.2 Roboto;color:#101828;margin-bottom:10px">Try one of these</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ prompts }}" as="p" hint-placeholder-count="4">
+<button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:14px;padding:13px 14px;cursor:pointer" style-hover="border-color:#D6E4FB;background:#F5F8FF">
+<span class="ms" style="font-size:18px;color:{{ p.ink }};flex:none">{{ p.icon }}</span>
+<span style="flex:1;font:400 14px/1.4 Roboto;color:#344054">{{ p.text }}</span>
+<span class="ms" style="font-size:17px;color:#98A2B3">north_east</span>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="flex:1"></div>
+<div style="position:sticky;bottom:0;background:#F8FAFC;padding:12px 16px 14px;border-top:1px solid #EAECF0">
+<div style="display:flex;gap:8px;align-items:flex-end">
+<div style="flex:1;border:1px solid #D0D5DD;border-radius:16px;background:#fff;padding:12px 14px;font:400 14.5px/1.4 Roboto;color:#98A2B3;min-height:48px;display:flex;align-items:center">Describe what happened…</div>
+<button onClick="{{ startVoice }}" style="width:48px;height:48px;flex:none;border:none;border-radius:16px;background:#E7F7F5;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#126B69" style-hover="background:#CFEEEB"><span class="ms" style="font-size:23px">mic</span></button>
+<button onClick="{{ sendDemo }}" style="width:48px;height:48px;flex:none;border:none;border-radius:16px;background:#2166D1;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff" style-hover="background:#174A9C"><span class="ms" style="font-size:22px">send</span></button>
+</div>
+<div style="display:flex;gap:6px;align-items:flex-start;margin-top:10px"><span class="ms" style="font-size:15px;color:#667085;flex:none">lock</span><span style="font:400 11.5px/1.4 Roboto;color:#667085">Never share OTPs, PINs, passwords, CVVs or UPI PINs here.</span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.askVoice }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 28px;background:#0B2545">
+<div style="display:flex;justify-content:flex-end"><button onClick="{{ goAsk }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#B9CEE8"><span class="ms" style="font-size:24px">close</span></button></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:26px">
+<div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center">
+<sc-if value="{{ voice.listening }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;inset:0;border-radius:99px;background:#2C9C96;animation:pulse 1.8s ease-out infinite"></span></sc-if>
+<span style="position:relative;width:88px;height:88px;border-radius:99px;background:{{ voice.orbBg }};display:flex;align-items:center;justify-content:center"><span class="ms" style="font-size:40px;color:#fff">{{ voice.orbIcon }}</span></span>
+</div>
+<div>
+<div style="font:700 22px/1.25 Roboto;color:#fff;letter-spacing:-.2px">{{ voice.title }}</div>
+<div style="font:400 14px/1.5 Roboto;color:#B9CEE8;margin-top:8px;max-width:250px">{{ voice.blurb }}</div>
+</div>
+<sc-if value="{{ voice.hasTranscript }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid #1E3E68;background:#0F2F57;border-radius:16px;padding:15px;text-align:left;width:100%">
+<div style="font:500 10.5px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#7FA6D4;margin-bottom:8px">I heard</div>
+<div style="font:400 15.5px/1.5 Roboto;color:#fff">{{ voice.transcript }}</div>
+</div>
+</sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<button onClick="{{ voice.primary }}" style="height:52px;border:none;border-radius:12px;background:{{ voice.btnBg }};color:#fff;font:700 15px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span class="ms" style="font-size:20px">{{ voice.btnIcon }}</span>{{ voice.btnLabel }}</button>
+<button onClick="{{ goAsk }}" style="height:48px;border:1px solid #1E3E68;border-radius:12px;background:transparent;color:#B9CEE8;font:500 14px Roboto;cursor:pointer">Type instead</button>
+<div style="font:400 11.5px/1.45 Roboto;color:#7FA6D4;text-align:center">Voice recordings are not stored. Only the text is sent.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.askConvo }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goAsk }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828">UPI fraud</span>
+<button onClick="{{ toggleSpeak }}" style="width:40px;height:40px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#2166D1;flex:none" style-hover="background:#F5F8FF"><span class="ms" style="font-size:20px">{{ speakIcon }}</span></button>
+</div>
+<div style="padding:16px 16px 24px;display:flex;flex-direction:column;gap:14px">
+<div style="align-self:flex-end;max-width:82%;background:#2166D1;color:#fff;border-radius:16px 16px 4px 16px;padding:12px 14px;font:400 14.5px/1.5 Roboto">Someone called saying they were from my bank and ₹40,000 has gone out of my account through UPI. It happened 20 minutes ago.</div>
+
+<div style="align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid #F2B8AE;background:#FDECEC;border-radius:14px;padding:13px;display:flex;gap:9px;align-items:flex-start">
+<span class="ms" style="font-size:19px;color:#B42318;flex:none">bolt</span>
+<span><span style="display:block;font:700 12.5px/1 Roboto;letter-spacing:.06em;text-transform:uppercase;color:#B42318;margin-bottom:5px">Act in the next few minutes</span><span style="display:block;font:400 13.5px/1.5 Roboto;color:#8F1717">Money that has just moved is sometimes still recoverable. Reporting speed matters more than anything else right now.</span></span>
+</div>
+<div style="background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:15px">
+<div style="font:400 14.5px/1.55 Roboto;color:#344054;margin-bottom:14px">Based on what you've told me, this looks like a fake customer-care fraud with an outgoing UPI transfer. Do these four things in order.</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+<sc-for list="{{ convoSteps }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;gap:11px;align-items:flex-start">
+<span style="width:23px;height:23px;border-radius:99px;flex:none;background:#EAF2FF;color:#174A9C;font:700 12px Roboto;display:flex;align-items:center;justify-content:center">{{ s.n }}</span>
+<span style="flex:1"><span style="display:block;font:500 14px/1.5 Roboto;color:#101828">{{ s.text }}</span><span style="display:block;font:400 12.5px/1.45 Roboto;color:#667085;margin-top:3px">{{ s.note }}</span></span>
+</div>
+</sc-for>
+</div>
+<div style="border-top:1px solid #EAECF0;padding-top:13px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:8px;align-items:flex-start"><span class="ms" style="font-size:16px;color:#B42318;flex:none">block</span><span style="font:400 13px/1.45 Roboto;color:#475467">Do not share any OTP, PIN, CVV or UPI PIN with anyone, including someone claiming to be from the bank or the police.</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start"><span class="ms" style="font-size:16px;color:#126B69;flex:none">inventory_2</span><span style="font:400 13px/1.45 Roboto;color:#475467">Keep the caller's number, the SMS alerts, the UPI reference number and the exact time.</span></div>
+</div>
+</div>
+<button onClick="{{ toggleConvoLegal }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid #EAECF0;background:#fff;border-radius:14px;padding:13px;cursor:pointer" style-hover="background:#F8FAFC">
+<span class="ms" style="font-size:19px;color:#102A56;flex:none">menu_book</span>
+<span style="flex:1"><span style="display:block;font:700 14px/1.25 Roboto;color:#101828">Legal basis</span><span style="display:block;font:400 12px/1.35 Roboto;color:#667085;margin-top:2px">2 verified sources</span></span>
+<span class="ms" style="font-size:21px;color:#667085">{{ convoLegalChevron }}</span>
+</button>
+<sc-if value="{{ convoLegalOpen }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ convoSources }}" as="src" hint-placeholder-count="2">
+<div style="border:1px solid #EAECF0;background:#F8FAFC;border-radius:12px;padding:12px">
+<div style="font:700 13.5px/1.35 Roboto;color:#102A56;margin-bottom:6px">{{ src.title }}</div>
+<div style="font:400 12.5px/1.5 Roboto;color:#475467;margin-bottom:9px">{{ src.excerpt }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<span style="display:inline-flex;align-items:center;gap:4px;font:500 11px Roboto;color:#18733A;background:#EAF7EE;border-radius:999px;padding:4px 8px"><span class="ms" style="font-size:13px">verified</span>Verified</span>
+<span style="font:400 11px Roboto;color:#667085">{{ src.meta }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button onClick="{{ openSave }}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #D6E4FB;background:#EAF2FF;color:#174A9C;font:500 13px Roboto;padding:9px 12px;border-radius:999px;cursor:pointer"><span class="ms" style="font-size:16px">bookmark_add</span>Save this situation</button>
+<button onClick="{{ goEscalation }}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #EAECF0;background:#fff;color:#344054;font:500 13px Roboto;padding:9px 12px;border-radius:999px;cursor:pointer"><span class="ms" style="font-size:16px">alt_route</span>Escalation</button>
+<button onClick="{{ toggleSpeak }}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #EAECF0;background:#fff;color:#344054;font:500 13px Roboto;padding:9px 12px;border-radius:999px;cursor:pointer"><span class="ms" style="font-size:16px">{{ speakIcon }}</span>{{ speakLabel }}</button>
+</div>
+</div>
+
+<div style="align-self:flex-start;max-width:92%;background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:15px">
+<div style="font:400 14.5px/1.55 Roboto;color:#344054;margin-bottom:12px">One more fact changes what happens next: did you approve anything on your phone — a UPI PIN, a collect request, or an app install?</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px">
+<sc-for list="{{ convoChips }}" as="c" hint-placeholder-count="3">
+<button onClick="{{ c.pick }}" style="border:1px solid #D0D5DD;background:#F8FAFC;color:#344054;font:500 13px Roboto;padding:9px 13px;border-radius:999px;cursor:pointer" style-hover="border-color:#2166D1;background:#F5F8FF">{{ c.label }}</button>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="flex:1"></div>
+<div style="position:sticky;bottom:0;background:#F8FAFC;padding:12px 16px 14px;border-top:1px solid #EAECF0;display:flex;gap:8px;align-items:center">
+<div style="flex:1;border:1px solid #D0D5DD;border-radius:16px;background:#fff;padding:12px 14px;font:400 14.5px/1.4 Roboto;color:#98A2B3;min-height:48px;display:flex;align-items:center">Reply…</div>
+<button onClick="{{ startVoice }}" style="width:48px;height:48px;flex:none;border:none;border-radius:16px;background:#E7F7F5;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#126B69"><span class="ms" style="font-size:23px">mic</span></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.incidents }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;padding:14px 20px 20px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+<div><div style="font:700 22px/1.2 Roboto;color:#102A56;letter-spacing:-.3px">My Incidents</div>
+<div style="font:400 13.5px/1.45 Roboto;color:#667085;margin-top:3px">Saved situations, notes and drafts.</div></div>
+<button onClick="{{ toggleSearch }}" style="width:44px;height:44px;border:1px solid #EAECF0;border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none" style-hover="background:#F2F4F7"><span class="ms" style="font-size:21px">search</span></button>
+</div>
+<sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:9px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;padding:0 12px;height:48px;margin-bottom:14px">
+<span class="ms" style="font-size:19px;color:#667085">search</span>
+<input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search title, area or tag" style="flex:1;border:none;outline:none;font:400 14.5px Roboto;color:#101828;background:none">
+<button onClick="{{ clearSearch }}" style="border:none;background:none;padding:4px;cursor:pointer;color:#98A2B3;display:flex"><span class="ms" style="font-size:19px">close</span></button>
+</div>
+</sc-if>
+<div style="display:flex;gap:7px;margin-bottom:18px;overflow:auto">
+<sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+<button onClick="{{ f.pick }}" style="flex:none;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.ink }};font:500 13px Roboto;padding:8px 14px;border-radius:999px;cursor:pointer">{{ f.label }}</button>
+</sc-for>
+</div>
+<div style="font:400 12px Roboto;color:#98A2B3;margin-bottom:9px">{{ resultCount }}</div>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px dashed #D0D5DD;border-radius:16px;padding:26px 18px;text-align:center">
+<span class="ms" style="font-size:26px;color:#98A2B3">folder_open</span>
+<div style="font:700 15px/1.3 Roboto;color:#344054;margin:10px 0 5px">Nothing here</div>
+<div style="font:400 13px/1.5 Roboto;color:#667085">No saved incident matches this filter or search.</div>
+</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ incidentList }}" as="i" hint-placeholder-count="3">
+<button onClick="{{ i.go }}" style="display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:14px;cursor:pointer" style-hover="border-color:#D0D5DD">
+<span style="width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ i.tint }}"><span class="ms" style="font-size:20px;color:{{ i.ink }}">{{ i.icon }}</span></span>
+<span style="flex:1;min-width:0">
+<span style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><span style="font:500 10.5px/1 Roboto;letter-spacing:.07em;text-transform:uppercase;color:{{ i.ink }}">{{ i.domain }}</span><span style="font:500 11px Roboto;color:{{ i.statusInk }};background:{{ i.statusBg }};border-radius:999px;padding:3px 8px">{{ i.status }}</span></span>
+<span style="display:block;font:700 15px/1.3 Roboto;color:#101828;text-wrap:pretty">{{ i.title }}</span>
+<span style="display:block;font:400 12.5px/1.4 Roboto;color:#667085;margin-top:4px">{{ i.meta }}</span>
+<span style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+<sc-for list="{{ i.tags }}" as="t" hint-placeholder-count="2">
+<span style="font:400 11.5px/1.3 Roboto;color:#475467;background:#F2F4F7;border-radius:999px;padding:4px 9px">{{ t }}</span>
+</sc-for>
+</span>
+</span>
+<span class="ms" style="font-size:19px;color:#98A2B3;flex:none">chevron_right</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:14px;border:1px dashed #D0D5DD;border-radius:14px;display:flex;gap:10px;align-items:flex-start">
+<span class="ms" style="font-size:18px;color:#667085;flex:none">devices</span>
+<span style="font:400 12.5px/1.5 Roboto;color:#475467">Incidents are stored on this device only. Uninstalling the app or clearing its data removes them.</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.incidentDetail }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goIncidents }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Incident</span>
+<button onClick="{{ askDelete }}" style="width:40px;height:40px;border:1px solid #EAECF0;border-radius:11px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#B42318;flex:none" style-hover="background:#FDECEC"><span class="ms" style="font-size:20px">delete</span></button>
+</div>
+<div style="padding:16px 20px 24px">
+<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px">
+<span style="font:500 11px/1 Roboto;letter-spacing:.07em;text-transform:uppercase;color:{{ det.ink }}">{{ det.domain }}</span>
+<span style="font:500 11px Roboto;color:{{ det.statusInk }};background:{{ det.statusBg }};border-radius:999px;padding:3px 8px">{{ det.status }}</span>
+</div>
+<h1 style="font:700 24px/1.25 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px;text-wrap:pretty">{{ det.title }}</h1>
+<div style="font:400 13px/1.45 Roboto;color:#667085;margin-bottom:20px">{{ det.saved }}</div>
+
+<div style="border:1px solid #D6E4FB;background:#F5F8FF;border-radius:16px;padding:15px;margin-bottom:16px">
+<div style="font:500 10.5px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#2166D1;margin-bottom:8px">Summary</div>
+<div style="font:400 14px/1.55 Roboto;color:#344054">{{ det.summary }}</div>
+</div>
+
+<div style="font:700 17px/1.2 Roboto;color:#101828;margin:22px 0 10px">Key facts</div>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;overflow:hidden;margin-bottom:6px">
+<sc-for list="{{ detailFacts }}" as="f" hint-placeholder-count="5">
+<div style="display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid #F2F4F7">
+<span style="width:118px;flex:none;font:400 13px/1.4 Roboto;color:#667085;text-wrap:pretty">{{ f.k }}</span>
+<span style="flex:1;font:500 13px/1.4 Roboto;color:#101828">{{ f.v }}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="font:700 17px/1.2 Roboto;color:#101828;margin:22px 0 10px">Timeline</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ timeline }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;gap:13px">
+<div style="width:22px;flex:none;display:flex;flex-direction:column;align-items:center">
+<span style="width:11px;height:11px;border-radius:99px;background:{{ e.dot }};margin-top:5px;flex:none"></span>
+<span style="flex:1;width:2px;background:#EAECF0"></span>
+</div>
+<div style="flex:1;padding-bottom:16px">
+<div style="font:500 14px/1.4 Roboto;color:#101828">{{ e.title }}</div>
+<div style="font:400 12.5px/1.45 Roboto;color:#667085;margin-top:2px">{{ e.when }}</div>
+<sc-if value="{{ e.body }}" hint-placeholder-val="{{ false }}"><div style="font:400 13px/1.5 Roboto;color:#475467;margin-top:6px;background:#F8FAFC;border:1px solid #EAECF0;border-radius:11px;padding:11px">{{ e.body }}</div></sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+<button onClick="{{ openTimeline }}" style="display:flex;align-items:center;gap:8px;border:1px dashed #D0D5DD;background:#fff;color:#2166D1;font:500 13.5px Roboto;padding:12px 14px;border-radius:12px;cursor:pointer;width:100%;margin-bottom:22px" style-hover="border-color:#2166D1;background:#F5F8FF"><span class="ms" style="font-size:18px">add</span>Add a timeline event</button>
+
+<div style="font:700 17px/1.2 Roboto;color:#101828;margin-bottom:10px">Notes</div>
+<textarea value="{{ note }}" onChange="{{ onNote }}" placeholder="Add anything you want to remember…" style="width:100%;min-height:92px;resize:vertical;border:1px solid #D0D5DD;border-radius:14px;padding:13px;font:400 14px/1.5 Roboto;color:#101828;outline:none;background:#fff" style-focus="border-color:#2166D1;box-shadow:0 0 0 3px #EAF2FF"></textarea>
+<button onClick="{{ saveNote }}" style="align-self:flex-start;margin-top:9px;border:1px solid #D6E4FB;background:#EAF2FF;color:#174A9C;font:500 13.5px Roboto;padding:10px 14px;border-radius:10px;cursor:pointer">Save note</button>
+
+<div style="font:700 17px/1.2 Roboto;color:#101828;margin:24px 0 10px">Evidence on this device</div>
+<sc-if value="{{ det.noEvidence }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px dashed #D0D5DD;border-radius:13px;padding:16px;font:400 13px/1.5 Roboto;color:#667085;margin-bottom:6px">No files linked yet. Photos, receipts and screenshots you attach stay on this device.</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">
+<sc-for list="{{ evidence }}" as="v" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:11px;border:1px solid {{ v.border }};background:{{ v.bg }};border-radius:13px;padding:12px">
+<span class="ms" style="font-size:20px;color:{{ v.ink }};flex:none">{{ v.icon }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 13.5px/1.3 Roboto;color:#101828;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.name }}</span><span style="display:block;font:400 12px/1.35 Roboto;color:{{ v.metaInk }};margin-top:2px">{{ v.meta }}</span></span>
+</div>
+</sc-for>
+</div>
+<div style="font:400 12px/1.45 Roboto;color:#667085;margin-bottom:24px">These are references to files already on your phone. Nothing is uploaded.</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<button onClick="{{ goComplaint }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#174A9C"><span class="ms" style="font-size:20px">description</span>Create complaint draft</button>
+<button onClick="{{ goEscalationScreen }}" style="height:52px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:700 15px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#F2F4F7"><span class="ms" style="font-size:20px">alt_route</span>View escalation route</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.complaint }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goIncidentDetail }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Draft · {{ draftTitle }}</span>
+<button onClick="{{ toggleEdit }}" style="border:1px solid #EAECF0;border-radius:10px;background:#fff;cursor:pointer;color:#2166D1;font:500 13px Roboto;padding:9px 12px;flex:none" style-hover="background:#F5F8FF">{{ editLabel }}</button>
+</div>
+<div style="padding:16px 20px 24px">
+<div style="border:1px solid #FFE7B8;background:#FFF6E4;border-radius:14px;padding:13px;margin-bottom:14px;display:flex;gap:9px;align-items:flex-start">
+<span class="ms" style="font-size:19px;color:#9A5B00;flex:none">edit_note</span>
+<span style="font:400 13px/1.5 Roboto;color:#9A5B00">Draft only. Fill in every square bracket and review it before sharing. The app does not file complaints for you.</span>
+</div>
+<div style="font:400 12.5px/1.45 Roboto;color:#667085;margin-bottom:16px">Generated for: {{ draftFor }}</div>
+<sc-if value="{{ draftEdited }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:9px;border:1px solid #D6E4FB;background:#F5F8FF;border-radius:12px;padding:11px 13px;margin-bottom:16px">
+<span class="ms" style="font-size:17px;color:#2166D1;flex:none">history</span>
+<span style="flex:1;font:400 12.5px/1.4 Roboto;color:#475467">You have edited this draft.</span>
+<button onClick="{{ resetDraft }}" style="border:none;background:none;padding:0;color:#2166D1;font:500 12.5px Roboto;cursor:pointer;text-decoration:underline;flex:none">Reset</button>
+</div>
+</sc-if>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:16px">
+<sc-for list="{{ draftSections }}" as="d" hint-placeholder-count="6">
+<div>
+<div style="font:500 10.5px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3;margin-bottom:7px">{{ d.label }}</div>
+<sc-if value="{{ d.editing }}" hint-placeholder-val="{{ false }}">
+<textarea value="{{ d.text }}" onChange="{{ d.onChange }}" rows="4" style="width:100%;resize:vertical;border:1px solid #2166D1;background:#F5F8FF;border-radius:11px;padding:11px;font:400 14px/1.6 Roboto;color:#101828;outline:none;box-shadow:0 0 0 3px #EAF2FF"></textarea>
+</sc-if>
+<sc-if value="{{ d.reading }}" hint-placeholder-val="{{ true }}">
+<div style="font:400 14px/1.6 Roboto;color:#344054;white-space:pre-line">{{ d.text }}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button onClick="{{ copyDraft }}" style="flex:1;height:48px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:500 14px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#F2F4F7"><span class="ms" style="font-size:19px">content_copy</span>Copy</button>
+<button onClick="{{ shareDraft }}" style="flex:1;height:48px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 14px Roboto;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#174A9C"><span class="ms" style="font-size:19px">share</span>Share</button>
+</div>
+<p style="font:400 11.5px/1.5 Roboto;color:#98A2B3;margin:16px 0 0">This draft states facts you provided. It does not allege that any officer or department acted illegally.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.escalation }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ escBack }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828">Escalation · {{ escTitle }}</span>
+</div>
+<div style="padding:16px 20px 24px">
+<h1 style="font:700 22px/1.3 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">Where this can go next</h1>
+<p style="font:400 14px/1.5 Roboto;color:#667085;margin:0 0 20px">Start at the top. Move down only if you get no response or the matter is serious.</p>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ authorities }}" as="a" hint-placeholder-count="4">
+<div style="border:1px solid {{ a.border }};background:#fff;border-radius:16px;overflow:hidden">
+<div style="display:flex;gap:12px;padding:15px;align-items:flex-start;background:{{ a.headBg }}">
+<span style="width:26px;height:26px;border-radius:99px;flex:none;background:{{ a.stepBg }};color:{{ a.stepInk }};font:700 12.5px Roboto;display:flex;align-items:center;justify-content:center">{{ a.step }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font:700 15.5px/1.3 Roboto;color:#101828">{{ a.name }}</span>
+<span style="display:block;font:400 12.5px/1.4 Roboto;color:#667085;margin-top:3px">{{ a.role }}</span>
+</span>
+</div>
+<div style="padding:0 15px 15px;display:flex;flex-direction:column;gap:9px">
+<div style="font:400 13.5px/1.5 Roboto;color:#344054">{{ a.what }}</div>
+<sc-for list="{{ a.contacts }}" as="c" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:10px;border:1px solid #EAECF0;background:#F8FAFC;border-radius:11px;padding:11px">
+<span class="ms" style="font-size:18px;color:#2166D1;flex:none">{{ c.icon }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 13px/1.3 Roboto;color:#101828">{{ c.value }}</span><span style="display:block;font:400 11.5px/1.3 Roboto;color:#667085;margin-top:2px">{{ c.label }}</span></span>
+</div>
+</sc-for>
+<sc-if value="{{ a.note }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:8px;align-items:flex-start;background:#FFF6E4;border:1px solid #FFE7B8;border-radius:11px;padding:11px"><span class="ms" style="font-size:16px;color:#9A5B00;flex:none">priority_high</span><span style="font:400 12.5px/1.45 Roboto;color:#9A5B00">{{ a.note }}</span></div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:18px;border:1px solid #D6E4FB;background:#F5F8FF;border-radius:16px;padding:15px;display:flex;gap:10px;align-items:flex-start">
+<span class="ms" style="font-size:20px;color:#2166D1;flex:none">balance</span>
+<span><span style="display:block;font:700 14.5px/1.3 Roboto;color:#102A56;margin-bottom:5px">When to get a lawyer</span><span style="display:block;font:400 13px/1.5 Roboto;color:#475467">If there is an arrest, a serious accusation, a large loss, or a deadline you could miss, talk to a lawyer. Free legal aid is available through the Maharashtra State Legal Services Authority.</span></span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.me }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;padding:14px 20px 20px">
+<div style="font:700 22px/1.2 Roboto;color:#102A56;letter-spacing:-.3px;margin-bottom:18px">Me</div>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;padding:16px;display:flex;gap:13px;align-items:center;margin-bottom:22px">
+<span style="width:48px;height:48px;border-radius:99px;background:#EAF2FF;flex:none;display:flex;align-items:center;justify-content:center;font:700 18px Roboto;color:#174A9C">{{ initials }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:700 16px/1.3 Roboto;color:#101828">{{ firstName }}</span><span style="display:block;font:400 13px/1.4 Roboto;color:#667085;margin-top:2px">{{ maskedPhone }} · {{ lang }}</span></span>
+<button onClick="{{ goName }}" style="border:1px solid #EAECF0;border-radius:10px;background:#fff;color:#2166D1;font:500 13px Roboto;padding:9px 12px;cursor:pointer;flex:none" style-hover="background:#F5F8FF">Edit</button>
+</div>
+<sc-for list="{{ settingGroups }}" as="g" hint-placeholder-count="3">
+<div style="margin-bottom:22px">
+<div style="font:500 10.5px/1 Roboto;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3;margin-bottom:9px">{{ g.label }}</div>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;overflow:hidden">
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+<button onClick="{{ r.go }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:none;border-bottom:1px solid #F2F4F7;background:#fff;padding:14px;cursor:pointer" style-hover="background:#F8FAFC">
+<span class="ms" style="font-size:20px;color:{{ r.ink }};flex:none">{{ r.icon }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 14.5px/1.3 Roboto;color:{{ r.labelInk }}">{{ r.label }}</span><sc-if value="{{ r.sub }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:400 12px/1.35 Roboto;color:#667085;margin-top:2px">{{ r.sub }}</span></sc-if></span>
+<sc-if value="{{ r.value }}" hint-placeholder-val="{{ false }}"><span style="font:400 13px Roboto;color:#667085;flex:none">{{ r.value }}</span></sc-if>
+<span class="ms" style="font-size:19px;color:#98A2B3;flex:none">chevron_right</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<p style="font:400 11.5px/1.5 Roboto;color:#98A2B3;margin:0 0 8px">AILex 1.0 · Mumbai / MMR · Legal first-aid, not legal representation.</p>
+<div style="font:400 11.5px/1.5 Roboto;color:#98A2B3">Signed in as {{ maskedPhone }}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.privacy }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goMe }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828">Privacy and data</span>
+</div>
+<div style="padding:16px 20px 24px">
+<h1 style="font:700 22px/1.3 Roboto;color:#102A56;margin:0 0 8px;letter-spacing:-.3px">What we hold, plainly</h1>
+<p style="font:400 14px/1.5 Roboto;color:#667085;margin:0 0 20px">Written as what the app actually does, not as a promise it cannot keep.</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+<sc-for list="{{ privacyRows }}" as="p" hint-placeholder-count="5">
+<div style="display:flex;gap:12px;border:1px solid #EAECF0;background:#fff;border-radius:14px;padding:14px">
+<span class="ms" style="font-size:20px;color:{{ p.ink }};flex:none">{{ p.icon }}</span>
+<span style="flex:1"><span style="display:block;font:700 14.5px/1.3 Roboto;color:#101828;margin-bottom:4px">{{ p.title }}</span><span style="display:block;font:400 13px/1.5 Roboto;color:#475467">{{ p.body }}</span></span>
+</div>
+</sc-for>
+</div>
+<div style="border:1px solid #F2B8AE;background:#FFF7F4;border-radius:16px;padding:16px">
+<div style="font:700 15.5px/1.3 Roboto;color:#8F1717;margin-bottom:6px">Delete my data</div>
+<div style="font:400 13px/1.5 Roboto;color:#475467;margin-bottom:14px">Removes your profile and number from our servers, and every saved incident, note and draft from this device. This cannot be undone.</div>
+<button onClick="{{ goDelete }}" style="height:48px;width:100%;border:1px solid #D92D20;border-radius:12px;background:#fff;color:#B42318;font:700 14.5px Roboto;cursor:pointer" style-hover="background:#FDECEC">Continue to deletion</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.deleteData }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px;background:#FFF7F4">
+<button onClick="{{ goPrivacy }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:8px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<span style="width:52px;height:52px;border-radius:14px;background:#FDECEC;display:flex;align-items:center;justify-content:center;margin-bottom:18px"><span class="ms" style="font-size:26px;color:#B42318">delete_forever</span></span>
+<h1 style="font:700 24px/1.25 Roboto;color:#8F1717;margin:0 0 10px;letter-spacing:-.3px">Delete everything?</h1>
+<p style="font:400 14.5px/1.5 Roboto;color:#475467;margin:0 0 20px">Confirm what goes. There is no recovery and no backup.</p>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+<sc-for list="{{ deleteRows }}" as="d" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #EAECF0;border-radius:13px;padding:13px">
+<span class="ms" style="font-size:18px;color:#B42318;flex:none">remove_circle</span>
+<span style="flex:1;font:400 13.5px/1.4 Roboto;color:#344054">{{ d.label }}</span>
+<span style="font:500 12.5px Roboto;color:#667085">{{ d.count }}</span>
+</div>
+</sc-for>
+</div>
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:14px;padding:14px;margin-bottom:20px">
+<div style="font:500 13px Roboto;color:#344054;margin-bottom:9px">Type DELETE to confirm</div>
+<input value="{{ delText }}" onChange="{{ onDelText }}" placeholder="DELETE" style="width:100%;height:50px;border:1px solid #D0D5DD;border-radius:11px;padding:0 13px;font:500 16px Roboto;color:#101828;outline:none;letter-spacing:1px" style-focus="border-color:#D92D20;box-shadow:0 0 0 3px #FDECEC">
+</div>
+<div style="flex:1"></div>
+<sc-if value="{{ delReady }}" hint-placeholder-val="{{ false }}"><button onClick="{{ doDelete }}" style="height:52px;border:none;border-radius:12px;background:#D92D20;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%;margin-bottom:10px" style-hover="background:#B42318">Delete my data permanently</button></sc-if>
+<sc-if value="{{ delNotReady }}" hint-placeholder-val="{{ true }}"><button disabled style="height:52px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 15px Roboto;width:100%;cursor:not-allowed;margin-bottom:10px">Delete my data permanently</button></sc-if>
+<button onClick="{{ goPrivacy }}" style="height:48px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:500 14.5px Roboto;cursor:pointer;width:100%">Keep my data</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.freeText }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:16px 20px 24px">
+<button onClick="{{ freeBack }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;color:#344054;margin-bottom:12px"><span class="ms" style="font-size:24px">arrow_back</span></button>
+<div style="display:inline-flex;align-self:flex-start;align-items:center;gap:6px;background:{{ qTint }};border-radius:999px;padding:6px 12px;margin-bottom:16px"><span class="ms" style="font-size:16px;color:{{ qInk }}">{{ qIcon }}</span><span style="font:500 12.5px Roboto;color:{{ qInk }}">{{ qCatLabel }}</span></div>
+<h1 style="font:700 21px/1.35 Roboto;color:#101828;margin:0 0 8px;letter-spacing:-.2px;text-wrap:pretty">{{ qText }}</h1>
+<p style="font:400 13.5px/1.45 Roboto;color:#667085;margin:0 0 18px">Answer in your own words. English, हिंदी or मराठी.</p>
+<textarea value="{{ freeText }}" onChange="{{ onFreeText }}" placeholder="Type your answer…" style="width:100%;min-height:130px;resize:vertical;border:1px solid #D0D5DD;border-radius:14px;padding:13px;font:400 15px/1.55 Roboto;color:#101828;outline:none;background:#fff" style-focus="border-color:#2166D1;box-shadow:0 0 0 3px #EAF2FF"></textarea>
+<button onClick="{{ startVoice }}" style="align-self:flex-start;margin-top:12px;display:flex;align-items:center;gap:7px;border:1px solid #CFEEEB;background:#E7F7F5;color:#126B69;font:500 13.5px Roboto;padding:10px 14px;border-radius:10px;cursor:pointer"><span class="ms" style="font-size:18px">mic</span>Speak it instead</button>
+<div style="flex:1"></div>
+<div style="display:flex;gap:9px;align-items:flex-start;padding:12px 13px;border:1px solid #EAECF0;background:#F8FAFC;border-radius:12px;margin-bottom:14px">
+<span class="ms" style="font-size:17px;color:#667085;flex:none">visibility_off</span>
+<span style="font:400 12.5px/1.45 Roboto;color:#475467">Leave out names, licence numbers and vehicle numbers unless they change the answer.</span>
+</div>
+<sc-if value="{{ freeReady }}" hint-placeholder-val="{{ false }}"><button onClick="{{ freeSubmit }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer;width:100%" style-hover="background:#174A9C">Continue</button></sc-if>
+<sc-if value="{{ freeNotReady }}" hint-placeholder-val="{{ true }}"><button disabled style="height:52px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 15px Roboto;width:100%;cursor:not-allowed">Continue</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.notifications }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goHome }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828">Notifications</span>
+</div>
+<div style="padding:16px 20px 24px">
+<p style="font:400 13.5px/1.5 Roboto;color:#667085;margin:0 0 18px">Reminders about your own incidents, and changes to the sources behind your saved answers. Nothing is sent to anyone else.</p>
+<div style="display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ notifications }}" as="n" hint-placeholder-count="4">
+<button onClick="{{ n.go }}" style="display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:1px solid #EAECF0;border-radius:16px;padding:14px;cursor:pointer" style-hover="border-color:#D0D5DD">
+<span style="width:36px;height:36px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ n.tint }}"><span class="ms" style="font-size:19px;color:{{ n.ink }}">{{ n.icon }}</span></span>
+<span style="flex:1;min-width:0">
+<span style="display:flex;align-items:center;gap:7px"><span style="flex:1;font:{{ n.weight }} 14.5px/1.35 Roboto;color:#101828;text-wrap:pretty">{{ n.title }}</span><sc-if value="{{ n.unread }}" hint-placeholder-val="{{ false }}"><span style="width:8px;height:8px;border-radius:9px;background:#2166D1;flex:none"></span></sc-if></span>
+<span style="display:block;font:400 12.5px/1.45 Roboto;color:#475467;margin-top:5px">{{ n.body }}</span>
+<span style="display:block;font:400 11.5px/1.3 Roboto;color:#98A2B3;margin-top:7px">{{ n.when }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is.help }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-bottom:1px solid #EAECF0;background:#fff;position:sticky;top:0;z-index:5">
+<button onClick="{{ goMe }}" style="width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#344054;flex:none"><span class="ms" style="font-size:23px">arrow_back</span></button>
+<span style="flex:1;font:700 16px/1.2 Roboto;color:#101828">Understanding AILex</span>
+</div>
+<div style="padding:16px 20px 24px">
+<div style="display:flex;gap:7px;margin-bottom:20px;overflow:auto">
+<sc-for list="{{ helpTabs }}" as="t" hint-placeholder-count="3">
+<button onClick="{{ t.pick }}" style="flex:none;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.ink }};font:500 13px Roboto;padding:8px 14px;border-radius:999px;cursor:pointer">{{ t.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ helpBody }}" as="h" hint-placeholder-count="4">
+<div style="border:1px solid #EAECF0;background:#fff;border-radius:16px;padding:15px">
+<div style="font:700 15.5px/1.3 Roboto;color:#102A56;margin-bottom:7px;text-wrap:pretty">{{ h.t }}</div>
+<div style="font:400 13.5px/1.55 Roboto;color:#475467">{{ h.b }}</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:18px;border:1px solid #D6E4FB;background:#F5F8FF;border-radius:16px;padding:15px;display:flex;gap:10px;align-items:flex-start">
+<span class="ms" style="font-size:20px;color:#2166D1;flex:none">balance</span>
+<span><span style="display:block;font:700 14.5px/1.3 Roboto;color:#102A56;margin-bottom:5px">Free legal aid</span><span style="display:block;font:400 13px/1.5 Roboto;color:#475467">Eligible citizens can get advice and representation at no cost through the Maharashtra State Legal Services Authority, on 15100.</span></span>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ sheet.timeline }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:flex-end;z-index:40">
+<div style="width:100%;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 24px;animation:rise .28s ease">
+<div style="width:36px;height:4px;border-radius:9px;background:#D0D5DD;margin:0 auto 18px"></div>
+<h2 style="font:700 20px/1.25 Roboto;color:#101828;margin:0 0 8px">Add a timeline event</h2>
+<p style="font:400 13.5px/1.5 Roboto;color:#475467;margin:0 0 16px">What happened, in one line. It is dated automatically.</p>
+<textarea value="{{ eventText }}" onChange="{{ onEventText }}" placeholder="e.g. Called the traffic helpline, no reference given" style="width:100%;min-height:84px;resize:vertical;border:1px solid #D0D5DD;border-radius:12px;padding:12px;font:400 14.5px/1.5 Roboto;color:#101828;outline:none" style-focus="border-color:#2166D1;box-shadow:0 0 0 3px #EAF2FF"></textarea>
+<div style="display:flex;gap:9px;margin-top:16px">
+<button onClick="{{ closeSheet }}" style="flex:1;height:50px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:500 14.5px Roboto;cursor:pointer">Cancel</button>
+<sc-if value="{{ eventReady }}" hint-placeholder-val="{{ false }}"><button onClick="{{ addEvent }}" style="flex:1;height:50px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 14.5px Roboto;cursor:pointer" style-hover="background:#174A9C">Add event</button></sc-if>
+<sc-if value="{{ eventNotReady }}" hint-placeholder-val="{{ true }}"><button disabled style="flex:1;height:50px;border:none;border-radius:12px;background:#EAECF0;color:#98A2B3;font:700 14.5px Roboto;cursor:not-allowed">Add event</button></sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheet.language }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:flex-end;z-index:40">
+<div style="width:100%;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 24px;animation:rise .28s ease">
+<div style="width:36px;height:4px;border-radius:9px;background:#D0D5DD;margin:0 auto 18px"></div>
+<h2 style="font:700 20px/1.25 Roboto;color:#101828;margin:0 0 8px">Preferred language</h2>
+<p style="font:400 13.5px/1.5 Roboto;color:#475467;margin:0 0 16px">Affects explanations and voice. It does not change which laws are covered.</p>
+<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px">
+<sc-for list="{{ langOptions }}" as="l" hint-placeholder-count="3">
+<button onClick="{{ l.pick }}" style="display:flex;align-items:center;gap:11px;text-align:left;padding:15px;border-radius:13px;cursor:pointer;border:1px solid {{ l.border }};background:{{ l.bg }}">
+<span class="ms" style="font-size:20px;color:#2166D1;flex:none">translate</span>
+<span style="flex:1;font:500 15px/1.3 Roboto;color:#101828">{{ l.label }}</span>
+</button>
+</sc-for>
+</div>
+<button onClick="{{ closeSheet }}" style="height:50px;width:100%;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:500 14.5px Roboto;cursor:pointer">Cancel</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheet.delete }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(16,24,40,.5);display:flex;align-items:center;justify-content:center;padding:28px;z-index:45">
+<div style="width:100%;background:#fff;border-radius:20px;padding:22px;animation:rise .22s ease">
+<h2 style="font:700 19px/1.3 Roboto;color:#101828;margin:0 0 8px">Delete this incident?</h2>
+<p style="font:400 14px/1.5 Roboto;color:#475467;margin:0 0 18px">The saved summary, timeline, notes and its references to files on this device will be removed. This cannot be undone.</p>
+<div style="display:flex;gap:9px">
+<button onClick="{{ closeSheet }}" style="flex:1;height:48px;border:1px solid #D0D5DD;border-radius:11px;background:#fff;color:#344054;font:500 14px Roboto;cursor:pointer">Cancel</button>
+<button onClick="{{ doDeleteIncident }}" style="flex:1;height:48px;border:none;border-radius:11px;background:#D92D20;color:#fff;font:700 14px Roboto;cursor:pointer" style-hover="background:#B42318">Delete</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ false }}">
+<div style="position:sticky;bottom:0;display:flex;background:#fff;border-top:1px solid #EAECF0;padding:8px 6px 10px;gap:2px">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.go }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;padding:6px 0;cursor:pointer">
+<span style="padding:3px 16px;border-radius:999px;background:{{ t.pill }};display:flex"><span class="ms" style="font-size:22px;color:{{ t.ink }}">{{ t.icon }}</span></span>
+<span style="font:500 11.5px/1.2 Roboto;color:{{ t.ink }}">{{ t.label }}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheet.save }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:flex-end;z-index:40">
+<div style="width:100%;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 24px;animation:rise .28s ease">
+<div style="width:36px;height:4px;border-radius:9px;background:#D0D5DD;margin:0 auto 18px"></div>
+<h2 style="font:700 21px/1.25 Roboto;color:#101828;margin:0 0 8px">Save this situation to My Incidents?</h2>
+<p style="font:400 14px/1.5 Roboto;color:#475467;margin:0 0 18px">A conversation is not saved unless you choose to save it. Saved incidents stay on this device.</p>
+<div style="border:1px solid #EAECF0;background:#F8FAFC;border-radius:14px;padding:13px;margin-bottom:20px">
+<div style="font:700 14.5px/1.3 Roboto;color:#101828;margin-bottom:4px">{{ res.title }}</div>
+<div style="font:400 12.5px/1.4 Roboto;color:#667085">{{ res.saveMeta }}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<button onClick="{{ doSave }}" style="height:52px;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer" style-hover="background:#174A9C">Save incident</button>
+<button onClick="{{ closeSheet }}" style="height:52px;border:1px solid #D0D5DD;border-radius:12px;background:#fff;color:#344054;font:700 15px Roboto;cursor:pointer" style-hover="background:#F2F4F7">Not now</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheet.coverage }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:flex-end;z-index:40">
+<div style="width:100%;background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 24px;animation:rise .28s ease">
+<div style="width:36px;height:4px;border-radius:9px;background:#D0D5DD;margin:0 auto 18px"></div>
+<h2 style="font:700 21px/1.25 Roboto;color:#101828;margin:0 0 8px">Coverage: Mumbai / MMR</h2>
+<p style="font:400 14px/1.5 Roboto;color:#475467;margin:0 0 16px">Guidance is built for Mumbai City, Mumbai Suburban, Thane and Navi Mumbai. Outside these areas I'll say so rather than apply Maharashtra rules to you.</p>
+<button onClick="{{ closeSheet }}" style="height:52px;width:100%;border:none;border-radius:12px;background:#2166D1;color:#fff;font:700 15px Roboto;cursor:pointer" style-hover="background:#174A9C">Got it</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:16px;right:16px;bottom:96px;z-index:50;display:flex;align-items:center;gap:10px;background:#101828;border-radius:12px;padding:13px 15px;animation:rise .22s ease">
+<span class="ms" style="font-size:19px;color:#6EE7A8">check_circle</span>
+<span style="font:500 13.5px/1.4 Roboto;color:#fff;flex:1">{{ toast }}</span>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:760,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'welcome', phone: '', otp: '', name: '', lang: 'English',
+    cat: 'traffic', qi: 0, answers: {}, open: { legal: false }, done: {},
+    sheet: null, toast: null, speaking: false, savedCount: 3,
+    voiceStage: 'listening', convoLegal: false, filter: 'All', editing: false,
+    delText: '', escFrom: 'lsResult',
+    incidentId: 'i1', notes: {}, drafts: {}, extraEvents: {}, extraIncidents: [], deletedIds: [],
+    searchOpen: false, search: '', freeText: '', eventText: '', helpTopic: 'how',
+  };
+
+  DOMAINS = [
+    { id:'police', label:'Police', blurb:'Stops, notices, FIRs, arrest', icon:'local_police', tint:'#EAF2FF', ink:'#2166D1' },
+    { id:'traffic', label:'Traffic', blurb:'Challans, towing, documents', icon:'traffic', tint:'#FFF6E4', ink:'#9A5B00' },
+    { id:'railway', label:'Mumbai Local', blurb:'Tickets, TC, RPF, theft', icon:'train', tint:'#E7F7F5', ink:'#126B69' },
+    { id:'govt', label:'Government / RTS', blurb:'Delays, refusals, appeals', icon:'account_balance', tint:'#F2F4F7', ink:'#344054' },
+    { id:'cyber', label:'Cyber', blurb:'Fraud, hacking, harassment', icon:'security', tint:'#FDECEC', ink:'#B42318' },
+  ];
+
+  QUESTIONS = {
+    traffic: [
+      { q:'Has a challan actually been issued?', why:'Whether a challan exists changes what you should ask for next.', options:['Yes, an e-challan or paper challan','No, nothing has been issued','I am not sure'] },
+      { q:'What is the officer asking you for?', why:'A cash demand is treated very differently from a document check.', options:['Cash on the spot','Vehicle documents','Both','Something else'] },
+      { q:'Where are you right now?', why:'Jurisdiction decides which procedure and which grievance route applies.', options:['Mumbai City','Mumbai Suburban','Thane','Navi Mumbai','Somewhere else'] },
+    ],
+    police: [
+      { q:'What has the officer told you so far?', why:'A stop, a notice and an arrest each follow a different procedure.', options:['They stopped me for questioning','They asked me to come to the station','They served a written notice','They said I am being arrested'] },
+      { q:'Are you at a police station or elsewhere?', why:'Where this is happening affects what should be recorded.', options:['On the street','At a police station','At my home or workplace'] },
+      { q:'Is anyone with you?', why:'Having a witness or informing a family member matters for a record.', options:['Yes, someone is with me','No, I am alone','I could call someone'] },
+    ],
+    railway: [
+      { q:'What is the ticket position?', why:'The applicable rule depends on which ticket you hold.', options:['No ticket','Wrong class or wrong destination','Valid ticket, dispute anyway','Season pass or UTS issue'] },
+      { q:'What is the TC or RPF asking for?', why:'A receipted penalty and a cash demand are not the same thing.', options:['Cash without a receipt','A penalty with a receipt','My identity documents','Nothing yet'] },
+      { q:'Which line are you on?', why:'Central, Western and Harbour lines are administered separately.', options:['Central','Western','Harbour / Trans-Harbour','Not sure'] },
+    ],
+    govt: [
+      { q:'What happened with your application?', why:'RTS, RTI and appeal routes each have their own trigger.', options:['It is delayed past the promised date','It was rejected','They refused to accept it','They asked for extra documents'] },
+      { q:'Do you have an acknowledgement or receipt number?', why:'Almost every escalation route needs this reference.', options:['Yes','No','I applied online only'] },
+      { q:'Was any unofficial payment mentioned?', why:'This changes the escalation route entirely.', options:['Yes','No','It was implied'] },
+    ],
+    cyber: [
+      { q:'What has happened?', why:'Money moving out needs a different first hour than a hacked account.', options:['Money left my account','My account was hacked','I am being blackmailed or threatened','My photos or data were misused'] },
+      { q:'When did it happen?', why:'The first hours matter most for stopping or reversing a transfer.', options:['Within the last hour','Today','Within the last few days','Longer ago'] },
+      { q:'Have you told your bank or the platform yet?', why:'This tells me whether mitigation has already started.', options:['Yes','No','I tried but could not reach them'] },
+    ],
+  };
+
+  RESULTS = {
+    traffic: {
+      title: 'Traffic stop — cash demanded',
+      highRisk: true,
+      safety: 'Stay in your vehicle if the road is unsafe. Do not argue, drive off, or record covertly. Keep your hands visible and your tone even.',
+      situation: 'You were stopped in Mumbai City. No challan has been issued yet, and the officer is asking for cash rather than putting the offence on record.',
+      facts: ['Traffic stop', 'No challan issued', 'Cash requested', 'Mumbai City'],
+      escalationBlurb: 'Mumbai Traffic Police grievance and ACB Maharashtra',
+      steps: [
+        { text:'Stay calm and stay put.', note:'Do not drive away and do not raise your voice. Nothing here is worth an obstruction allegation.' },
+        { text:'Ask for the officer\u2019s name and buckle number, and note the time and location.', note:'You can write this in your phone notes in the open. No covert recording.' },
+        { text:'Ask for a challan and say you will pay any fine through the official e-challan route.', note:'This is the single most useful sentence in this situation.' },
+        { text:'If a challan is issued, check that the offence, the section and the amount are printed on it before you accept it.' },
+        { text:'Keep the challan or the e-challan reference number safe.', note:'You will need it for any dispute or grievance.' },
+      ],
+      sections: [
+        { id:'position', icon:'assignment_ind', title:'Your position', meta:'What you may be required to do', ink:'#344054', items:[
+          { icon:'arrow_right', text:'You must stop when signalled by a uniformed officer in the course of duty.' },
+          { icon:'arrow_right', text:'You are generally required to produce your driving licence when asked, and to produce registration, insurance and PUC as required.' },
+          { icon:'arrow_right', text:'If an offence did occur, a challan is the lawful outcome. Asking for a challan is not an admission of anything beyond what is on it.' },
+        ], caveat:'What exactly you must carry versus produce later can depend on the document and the vehicle. Check the official source before relying on it.' },
+        { id:'rights', icon:'gavel', title:'Your rights', meta:'Procedural protections that may apply', ink:'#2166D1', items:[
+          { icon:'check', text:'You may ask the officer to identify themselves.' },
+          { icon:'check', text:'You may ask for the offence and the provision it is booked under to be stated on the challan.' },
+          { icon:'check', text:'You may pay through the official e-challan system rather than in cash on the road.' },
+          { icon:'check', text:'You may dispute a challan you believe is wrong through the official grievance or court route.' },
+        ] },
+        { id:'powers', icon:'shield', title:'Authority powers', meta:'What the officer may lawfully do', ink:'#9A5B00', items:[
+          { icon:'arrow_right', text:'Stop your vehicle and check documents.' },
+          { icon:'arrow_right', text:'Issue a challan for an offence that is made out.' },
+          { icon:'arrow_right', text:'In specified circumstances, seize documents or the vehicle, or require it to be towed.' },
+        ], caveat:'Seizure and towing powers are situation-specific. Do not assume a seizure is improper simply because you disagree with it.' },
+        { id:'improper', icon:'report', title:'What should not happen', meta:'Only where the position is clear', ink:'#B42318', items:[
+          { icon:'close', text:'A demand for cash in place of an official challan is not a lawful way to settle a traffic offence.' },
+          { icon:'close', text:'A penalty collected with no receipt and no record leaves you with nothing to dispute later.' },
+        ] },
+        { id:'avoid', icon:'do_not_disturb_on', title:'Avoid', meta:'Actions that make this worse', ink:'#B42318', items:[
+          { icon:'close', text:'Do not pay cash to avoid a challan.' },
+          { icon:'close', text:'Do not argue, threaten to complain, or record covertly.' },
+          { icon:'close', text:'Do not drive away, and do not obstruct the officer.' },
+          { icon:'close', text:'Do not hand over original documents without noting what was taken.' },
+        ] },
+        { id:'preserve', icon:'inventory_2', title:'Preserve', meta:'Keep this while it is fresh', ink:'#126B69', items:[
+          { icon:'arrow_right', text:'Date, time and exact location of the stop.' },
+          { icon:'arrow_right', text:'Officer name and buckle number if given.' },
+          { icon:'arrow_right', text:'Challan number or e-challan reference.' },
+          { icon:'arrow_right', text:'Names and numbers of anyone who saw the stop.' },
+        ] },
+        { id:'legal', icon:'menu_book', title:'Legal basis', meta:'2 verified sources', ink:'#102A56', hasSources:true, sources:[
+          { title:'Motor Vehicles Act, 1988 — Section 130', excerpt:'Duty of a driver to produce a driving licence for examination on demand by an authorised officer.', status:'Verified', meta:'India Code · last verified 12 Aug 2026' },
+          { title:'Maharashtra e-challan system — official payment route', excerpt:'Traffic fines in Maharashtra are payable against a challan through the official e-challan portal.', status:'Verified', meta:'Maharashtra Traffic Police · last verified 04 Aug 2026' },
+        ], caveat:'Exact fine amounts change by notification and are not shown here unless verified against the current official figure.' },
+      ],
+    },
+
+    police: {
+      title: 'Police asked me to come to the station',
+      highRisk: true,
+      safety: 'Do not resist, argue or walk away. Tell one family member or friend where you are going and who asked you, before you go anywhere.',
+      situation: 'You were stopped on the street in Mumbai and asked to come to a police station. Nothing has been served in writing yet and someone is with you.',
+      facts: ['Police interaction', 'Asked to attend station', 'On the street', 'Witness present'],
+      escalationBlurb: 'Senior officer, then the Police Commissionerate',
+      steps: [
+        { text:'Ask what this is about, and ask for it in writing.', note:'A written notice or summons tells you who is calling you, under what provision, and when. Ask politely; do not demand.' },
+        { text:'Note the officer\u2019s name, rank, buckle number and the police station.', note:'Write it in your phone in the open. No covert recording.' },
+        { text:'Tell someone where you are going before you move.', note:'Give them the station name and the officer\u2019s name. Ask them to call you in an hour.' },
+        { text:'Go if you are required to. Take an ID and, if you can, someone with you.', note:'Attending when required is not an admission of anything.' },
+        { text:'If arrest is mentioned at any point, ask to inform a family member and to speak to a lawyer.', note:'Free legal aid is available through the district legal services authority.' },
+      ],
+      sections: [
+        { id:'position', icon:'assignment_ind', title:'Your position', meta:'What you may be required to do', ink:'#344054', items:[
+          { icon:'arrow_right', text:'If you are required to attend, attending is generally the safer course. Refusing to attend can have consequences of its own.' },
+          { icon:'arrow_right', text:'You are expected not to obstruct an officer acting in the course of duty.' },
+          { icon:'arrow_right', text:'Whether you must answer a particular question, and whether you can be required to attend at all, depends on your role in the matter.' },
+        ], caveat:'Whether you are a witness, a suspect or neither changes this materially. Say clearly that you do not know which you are, and ask.' },
+        { id:'rights', icon:'gavel', title:'Your rights', meta:'Procedural protections that may apply', ink:'#2166D1', items:[
+          { icon:'check', text:'You may ask why you are being called and ask for a written notice.' },
+          { icon:'check', text:'You may ask the officer to identify themselves and note their details.' },
+          { icon:'check', text:'You may inform a family member or friend.' },
+          { icon:'check', text:'If you are arrested, protections around being informed of the grounds, informing a relative and consulting a lawyer apply.' },
+        ] },
+        { id:'powers', icon:'shield', title:'Authority powers', meta:'What the police may lawfully do', ink:'#9A5B00', items:[
+          { icon:'arrow_right', text:'Require attendance in specified circumstances, by notice or summons.' },
+          { icon:'arrow_right', text:'Question a person in connection with an investigation.' },
+          { icon:'arrow_right', text:'Arrest without a warrant in the circumstances the law permits.' },
+        ], caveat:'These powers are procedure-bound and situation-specific. Do not assume any single step is improper because you disagree with it.' },
+        { id:'improper', icon:'report', title:'What should not happen', meta:'Only where the position is clear', ink:'#B42318', items:[
+          { icon:'close', text:'A demand for money to drop, delay or soften a matter is not a lawful step at any stage.' },
+          { icon:'close', text:'Threats, abuse or physical force against a person in custody are not permitted.' },
+        ] },
+        { id:'avoid', icon:'do_not_disturb_on', title:'Avoid', meta:'Actions that make this worse', ink:'#B42318', items:[
+          { icon:'close', text:'Do not resist, run, or physically obstruct anyone.' },
+          { icon:'close', text:'Do not pay anyone to make this go away.' },
+          { icon:'close', text:'Do not sign a document you have not read, and do not sign a blank page.' },
+          { icon:'close', text:'Do not guess at facts to fill a silence. "I do not remember" is an answer.' },
+        ] },
+        { id:'preserve', icon:'inventory_2', title:'Preserve', meta:'Keep this while it is fresh', ink:'#126B69', items:[
+          { icon:'arrow_right', text:'Officer name, rank, buckle number and station.' },
+          { icon:'arrow_right', text:'Date, time and place you were stopped, and when you were asked to attend.' },
+          { icon:'arrow_right', text:'A photo of any notice served on you.' },
+          { icon:'arrow_right', text:'Name and number of the person who was with you.' },
+        ] },
+        { id:'legal', icon:'menu_book', title:'Legal basis', meta:'2 verified sources', ink:'#102A56', hasSources:true, sources:[
+          { title:'Bharatiya Nagarik Suraksha Sanhita, 2023 — attendance of witnesses', excerpt:'A police officer may, by written order, require the attendance of a person who appears to be acquainted with the facts of a case, subject to the limits the provision sets.', status:'Verified', meta:'India Code · last verified 11 Aug 2026' },
+          { title:'Constitution of India — Article 22', excerpt:'A person arrested is to be informed of the grounds of arrest and is not to be denied the right to consult a legal practitioner.', status:'Verified', meta:'India Code · last verified 11 Aug 2026' },
+        ], caveat:'Which provision applies depends on whether you are a witness or an accused, and on the offence alleged. Verify against the official text before relying on it.' },
+      ],
+    },
+
+    railway: {
+      title: 'TC asking for cash without a receipt',
+      highRisk: false,
+      safety: 'Stay on the platform or in a lit public area. Do not get off at an unfamiliar station to settle this.',
+      situation: 'You are travelling on the Harbour line without a ticket, and the TC is asking for cash rather than issuing a receipted penalty.',
+      facts: ['Railway', 'No ticket', 'Cash requested, no receipt', 'Harbour line'],
+      escalationBlurb: 'Station manager, then the divisional railway office',
+      steps: [
+        { text:'Accept that a penalty is payable, and ask for it on an official receipt.', note:'Travelling without a valid ticket does attract a penalty. Asking for the receipt is the point, not avoiding the fare.' },
+        { text:'Say clearly that you will pay the penalty, but only against a receipt.', note:'Keep it factual and quiet. No crowd, no argument.' },
+        { text:'Note the TC\u2019s name and number from their badge, the train, and the time.' },
+        { text:'If the receipt is refused, ask to be taken to the station manager or the ticket-checking supervisor.', note:'This is a normal request, not an escalation against anyone.' },
+        { text:'Keep the receipt. It closes the matter and is your only proof if it comes up again.' },
+      ],
+      sections: [
+        { id:'position', icon:'assignment_ind', title:'Your position', meta:'What you may be required to do', ink:'#344054', items:[
+          { icon:'arrow_right', text:'Travelling without a valid ticket is an offence under railway law, and an excess fare and penalty are payable.' },
+          { icon:'arrow_right', text:'You may be required to give your name and address to the checking staff.' },
+          { icon:'arrow_right', text:'Refusing to pay a lawfully assessed penalty can lead to further proceedings.' },
+        ], caveat:'The exact penalty depends on the class, the distance and the current rules. Amounts are not shown here unless verified against the official figure.' },
+        { id:'rights', icon:'gavel', title:'Your rights', meta:'Procedural protections that may apply', ink:'#2166D1', items:[
+          { icon:'check', text:'You may ask the checking staff to identify themselves.' },
+          { icon:'check', text:'You may ask for an official receipt or excess-fare ticket for anything you pay.' },
+          { icon:'check', text:'You may ask to be taken to the station manager if a receipt is refused.' },
+        ] },
+        { id:'powers', icon:'shield', title:'Authority powers', meta:'What the TC and RPF may lawfully do', ink:'#9A5B00', items:[
+          { icon:'arrow_right', text:'Check tickets and require you to produce a valid ticket or pass.' },
+          { icon:'arrow_right', text:'Assess and collect the excess fare and penalty, against a receipt.' },
+          { icon:'arrow_right', text:'Remove a person from a train or hand the matter on where the rules permit.' },
+        ] },
+        { id:'improper', icon:'report', title:'What should not happen', meta:'Only where the position is clear', ink:'#B42318', items:[
+          { icon:'close', text:'A payment collected with no receipt and no record is not a lawful settlement of a railway penalty.' },
+          { icon:'close', text:'A penalty amount that changes depending on what you are willing to pay is not an assessed penalty.' },
+        ] },
+        { id:'avoid', icon:'do_not_disturb_on', title:'Avoid', meta:'Actions that make this worse', ink:'#B42318', items:[
+          { icon:'close', text:'Do not pay cash without a receipt.' },
+          { icon:'close', text:'Do not run, jump between coaches, or get off at a deserted station.' },
+          { icon:'close', text:'Do not argue loudly or draw a crowd.' },
+          { icon:'close', text:'Do not give a false name or a false address.' },
+        ] },
+        { id:'preserve', icon:'inventory_2', title:'Preserve', meta:'Keep this while it is fresh', ink:'#126B69', items:[
+          { icon:'arrow_right', text:'The receipt or excess-fare ticket.' },
+          { icon:'arrow_right', text:'Train number, coach, station and time.' },
+          { icon:'arrow_right', text:'TC name and badge number.' },
+          { icon:'arrow_right', text:'Names of any fellow passengers who saw it.' },
+        ] },
+        { id:'legal', icon:'menu_book', title:'Legal basis', meta:'2 verified sources', ink:'#102A56', hasSources:true, sources:[
+          { title:'Railways Act, 1989 — travelling without a proper pass or ticket', excerpt:'A person travelling without a valid pass or ticket is liable to pay the excess fare together with a penalty as provided.', status:'Verified', meta:'India Code · last verified 07 Aug 2026' },
+          { title:'Indian Railways — ticket checking and excess-fare receipts', excerpt:'Excess fare and penalty collected by checking staff are to be issued against an official excess-fare ticket or receipt.', status:'Verified', meta:'Indian Railways · last verified 07 Aug 2026' },
+        ], caveat:'Central, Western and Harbour lines are administered separately and grievance routes differ by division.' },
+      ],
+    },
+
+    govt: {
+      title: 'Application delayed past the promised date',
+      highRisk: false,
+      safety: '',
+      situation: 'A government application is past the date you were promised, you hold an acknowledgement number, and no unofficial payment has been mentioned.',
+      facts: ['Government / RTS', 'Delayed past due date', 'Acknowledgement held', 'No payment demanded'],
+      escalationBlurb: 'First appellate authority, then the RTS Commission',
+      steps: [
+        { text:'Check the promised timeline for this exact service and note how many days it is overdue.', note:'Most Maharashtra RTS services publish a stated number of days. The overdue count is what an appeal turns on.' },
+        { text:'Track the application online using your acknowledgement number and take a screenshot of the current status.' },
+        { text:'Ask the designated officer in writing for the current status and the reason for the delay.', note:'A written request creates the record an appeal needs. Email or a stamped letter both work.' },
+        { text:'If the service falls under RTS and the period has lapsed, file a first appeal with the designated appellate officer.', note:'The appeal is a form, not a court case. There is usually no fee.' },
+        { text:'Keep every acknowledgement, receipt and screenshot together.' },
+      ],
+      sections: [
+        { id:'position', icon:'assignment_ind', title:'Your position', meta:'What is expected of you', ink:'#344054', items:[
+          { icon:'arrow_right', text:'The application needs to be complete. A genuine document shortfall is a legitimate reason for delay.' },
+          { icon:'arrow_right', text:'Escalation routes normally run in order: designated officer, first appellate authority, then above.' },
+          { icon:'arrow_right', text:'Keep your acknowledgement number. Almost nothing can be pursued without it.' },
+        ], caveat:'Whether your specific service is notified under the Maharashtra RTS Act decides which route applies. Verify the service on the official list.' },
+        { id:'rights', icon:'gavel', title:'Your rights', meta:'Procedural protections that may apply', ink:'#2166D1', items:[
+          { icon:'check', text:'For a notified service, you may expect it within the published time limit.' },
+          { icon:'check', text:'You may ask for a written reason if your application is rejected.' },
+          { icon:'check', text:'You may appeal to the designated first appellate authority when the period lapses.' },
+          { icon:'check', text:'You may seek related records through the RTI route where appropriate.' },
+        ] },
+        { id:'powers', icon:'shield', title:'Department powers', meta:'What the office may lawfully do', ink:'#9A5B00', items:[
+          { icon:'arrow_right', text:'Ask for documents the service genuinely requires.' },
+          { icon:'arrow_right', text:'Reject an application, with reasons recorded.' },
+          { icon:'arrow_right', text:'Seek verification or an inspection where the service provides for it.' },
+        ] },
+        { id:'improper', icon:'report', title:'What should not happen', meta:'Only where the position is clear', ink:'#B42318', items:[
+          { icon:'close', text:'A demand for an unofficial payment to move a file is not a lawful step at any stage.' },
+          { icon:'close', text:'A refusal to accept a complete application, or to give any acknowledgement, leaves you with nothing to appeal against.' },
+        ] },
+        { id:'avoid', icon:'do_not_disturb_on', title:'Avoid', meta:'Actions that make this worse', ink:'#B42318', items:[
+          { icon:'close', text:'Do not pay an agent or a middleman to speed up a file.' },
+          { icon:'close', text:'Do not file a fresh application for the same thing. It resets the clock and confuses the record.' },
+          { icon:'close', text:'Do not go straight to the police. A service delay is a departmental matter.' },
+        ] },
+        { id:'preserve', icon:'inventory_2', title:'Preserve', meta:'Keep this while it is fresh', ink:'#126B69', items:[
+          { icon:'arrow_right', text:'Acknowledgement or receipt number and the date of application.' },
+          { icon:'arrow_right', text:'Screenshots of the online status, with dates.' },
+          { icon:'arrow_right', text:'Copies of everything you submitted.' },
+          { icon:'arrow_right', text:'Names and designations of anyone you spoke to, with dates.' },
+        ] },
+        { id:'legal', icon:'menu_book', title:'Legal basis', meta:'2 verified sources', ink:'#102A56', hasSources:true, sources:[
+          { title:'Maharashtra Right to Public Services Act, 2015', excerpt:'Notified public services are to be delivered within the stipulated time limit, with a first and second appeal against failure to do so.', status:'Verified', meta:'Government of Maharashtra · last verified 05 Aug 2026' },
+          { title:'Aaple Sarkar — service list and application tracking', excerpt:'Official portal for applying for and tracking notified Maharashtra public services.', status:'Verified', meta:'Government of Maharashtra · last verified 05 Aug 2026' },
+        ], caveat:'Time limits differ by service. Confirm the number of days published for your exact service before counting the delay.' },
+      ],
+    },
+
+    cyber: {
+      title: 'Money left my account — UPI fraud',
+      highRisk: true,
+      safety: 'Do not call back the number that called you, and do not install anything they sent. Do not share an OTP, PIN, CVV or UPI PIN with anyone, including someone claiming to be from the bank or the police.',
+      situation: 'Money left your account through UPI within the last hour, and you have already told your bank. Speed matters more than anything else right now.',
+      facts: ['Cyber', 'Outgoing UPI transfer', 'Within the last hour', 'Bank informed'],
+      escalationBlurb: 'Helpline 1930, NCRP, then the cyber police station',
+      steps: [
+        { text:'Report on the national cyber-crime helpline 1930 and get an acknowledgement number.', note:'The sooner a report is on record, the better the chance of a hold on the money downstream.' },
+        { text:'File the complaint on the National Cyber Crime Reporting Portal as well.', note:'Keep the acknowledgement. Every later step will ask for it.' },
+        { text:'Ask your bank in writing to mark the transaction unauthorised, and note the complaint reference.', note:'A phone call alone leaves no record. Follow it with the bank\u2019s own online dispute form.' },
+        { text:'Freeze or change UPI access on the affected account.', note:'Through your bank, or the UPI app\u2019s own security settings.' },
+        { text:'Change the passwords and enable two-factor login on the email and phone number linked to the account.' },
+      ],
+      sections: [
+        { id:'position', icon:'assignment_ind', title:'Your position', meta:'What affects the outcome', ink:'#344054', items:[
+          { icon:'arrow_right', text:'How quickly you notify the bank is the single biggest factor in what you may recover.' },
+          { icon:'arrow_right', text:'Whether you approved anything on your phone — a UPI PIN, a collect request, an app install — affects how the transaction is treated.' },
+          { icon:'arrow_right', text:'Answer the bank\u2019s questions accurately, including anything you did approve. An inaccurate account weakens a genuine claim.' },
+        ], caveat:'Liability in an unauthorised electronic transaction turns on the type of negligence and the notification timeline. Verify your position with your bank in writing.' },
+        { id:'rights', icon:'gavel', title:'Your rights', meta:'Procedural protections that may apply', ink:'#2166D1', items:[
+          { icon:'check', text:'You may report an unauthorised electronic transaction to your bank and have it examined.' },
+          { icon:'check', text:'You may file a cyber-crime complaint and receive an acknowledgement.' },
+          { icon:'check', text:'You may escalate to the bank\u2019s grievance officer, and beyond that to the RBI ombudsman scheme.' },
+        ] },
+        { id:'powers', icon:'shield', title:'What the bank and police can do', meta:'The realistic picture', ink:'#9A5B00', items:[
+          { icon:'arrow_right', text:'The bank can investigate, raise a chargeback where applicable, and place the outcome on record.' },
+          { icon:'arrow_right', text:'Police can act on the complaint and pursue the receiving accounts.' },
+          { icon:'arrow_right', text:'A hold on the money depends on where it has already moved and how quickly it was reported.' },
+        ], caveat:'No one can guarantee recovery. Be cautious of anyone who does.' },
+        { id:'improper', icon:'report', title:'Watch for a second fraud', meta:'This is common after the first one', ink:'#B42318', items:[
+          { icon:'close', text:'Nobody from a bank, the police or a portal will ask you for an OTP, PIN, CVV or UPI PIN to reverse a transaction.' },
+          { icon:'close', text:'A paid "recovery agent" who contacts you after the fraud is very often the same network coming back.' },
+        ] },
+        { id:'avoid', icon:'do_not_disturb_on', title:'Avoid', meta:'Actions that make this worse', ink:'#B42318', items:[
+          { icon:'close', text:'Do not call back the number that called you.' },
+          { icon:'close', text:'Do not install any app, or grant screen sharing or remote access to anyone.' },
+          { icon:'close', text:'Do not pay anyone who promises to recover the money.' },
+          { icon:'close', text:'Do not delete the SMS alerts, the call log or the chat. That is your evidence.' },
+        ] },
+        { id:'preserve', icon:'inventory_2', title:'Preserve', meta:'Keep this while it is fresh', ink:'#126B69', items:[
+          { icon:'arrow_right', text:'The caller\u2019s number and the exact time of the call.' },
+          { icon:'arrow_right', text:'All SMS and app alerts for the debit, untouched.' },
+          { icon:'arrow_right', text:'UPI reference or transaction ID, and the amount.' },
+          { icon:'arrow_right', text:'Screenshots of any chat, payment link or QR code involved.' },
+          { icon:'arrow_right', text:'The 1930 and portal acknowledgement numbers.' },
+        ] },
+        { id:'legal', icon:'menu_book', title:'Legal basis', meta:'2 verified sources', ink:'#102A56', hasSources:true, sources:[
+          { title:'RBI — customer liability in unauthorised electronic banking transactions', excerpt:'Customer liability in an unauthorised electronic banking transaction depends on the type of negligence and how quickly the customer notifies the bank.', status:'Verified', meta:'Reserve Bank of India · last verified 09 Aug 2026' },
+          { title:'National Cyber Crime Reporting Portal and helpline 1930', excerpt:'Official route for reporting cyber financial fraud, operated with the Ministry of Home Affairs.', status:'Verified', meta:'Government of India · last verified 09 Aug 2026' },
+        ], caveat:'Which offence is registered depends on the facts. That is for the investigating officer, not for this app, to decide.' },
+      ],
+    },
+  };
+
+  LOCATION_Q = { traffic: 2, police: 1, railway: 2 };
+
+  EMERGENCY = [
+    { label:'Emergency response', blurb:'Police, fire, ambulance', number:'112', icon:'emergency' },
+    { label:'Police control room', blurb:'Mumbai Police', number:'100', icon:'local_police' },
+    { label:'Women\u2019s helpline', blurb:'24x7 support', number:'1091', icon:'support_agent' },
+    { label:'Cyber fraud reporting', blurb:'National helpline', number:'1930', icon:'security' },
+  ];
+
+  INDEX = [
+    { g:'Onboarding' }, { s:'welcome', l:'Welcome' }, { s:'phone', l:'Mobile number' }, { s:'otp', l:'OTP' }, { s:'name', l:'Name' }, { s:'language', l:'Language' },
+    { g:'Live situation' }, { s:'lsSafety', l:'Safety check' }, { s:'lsUrgent', l:'Urgent help' }, { s:'lsCategory', l:'Category' }, { s:'lsQuestion', l:'Questions' }, { s:'lsResult', l:'Result — action first' },
+    { g:'Core tabs' }, { s:'home', l:'Home' }, { s:'ask', l:'Ask Legal AI' }, { s:'askVoice', l:'Voice turn' }, { s:'askConvo', l:'Conversation' }, { s:'incidents', l:'My Incidents' }, { s:'me', l:'Me' },
+    { g:'Detail' }, { s:'incidentDetail', l:'Incident detail' }, { s:'complaint', l:'Complaint draft' }, { s:'escalation', l:'Escalation' },
+    { g:'Support' }, { s:'freeText', l:'Type an answer' }, { s:'notifications', l:'Notifications' }, { s:'help', l:'Help and how it works' }, { s:'privacy', l:'Privacy and data' }, { s:'deleteData', l:'Delete my data' },
+  ];
+
+  NOTIFICATIONS = [
+    { title:'Your NCRP portal complaint is still not filed', body:'The 1930 report is on record. The written portal complaint for the ₹18,400 debit has not been filed yet.', when:'Today, 9:00 am', icon:'priority_high', ink:'#B42318', tint:'#FDECEC', unread:true, to:'i2' },
+    { title:'Second e-challan still showing as pending', body:'The duplicate challan at Sion Circle has not changed status since you saved it.', when:'Yesterday', icon:'traffic', ink:'#9A5B00', tint:'#FFF6E4', unread:true, to:'i1' },
+    { title:'A source behind one of your answers was updated', body:'The Maharashtra e-challan payment route page was re-verified on 04 Aug 2026. Your saved guidance is unchanged.', when:'24 Aug 2026', icon:'menu_book', ink:'#2166D1', tint:'#EAF2FF', unread:false, to:'' },
+    { title:'Evidence file missing', body:'payment-receipt.pdf is no longer on this device, so the reference in your challan incident no longer opens.', when:'23 Aug 2026', icon:'broken_image', ink:'#B42318', tint:'#FDECEC', unread:false, to:'i1' },
+  ];
+
+  HELP = {
+    how: { label:'How Legal AI works', body:[
+      { t:'It answers from verified sources, not from memory', b:'Every answer is built against a stored set of legal provisions and official pages, each with a date on which it was last verified. Where a provision has not been verified, the app says so instead of guessing.' },
+      { t:'It asks only what changes the answer', b:'Questions are limited to the facts that move the guidance — whether a challan exists, which line you are on, how long ago money left your account. Your name, licence number and vehicle number are not asked for unless they matter.' },
+      { t:'Rights, obligations and powers are kept apart', b:'Most confusion in a live situation comes from mixing these three. The app separates what you may do, what you are required to do, and what the authority may lawfully do.' },
+      { t:'It will not tell you a fine amount it cannot verify', b:'Penalty figures change by notification. Where the current official figure is not verified, the app describes the route rather than quoting a number.' },
+    ] },
+    limits: { label:'What it cannot do', body:[
+      { t:'It is not your lawyer', b:'There is no lawyer-client relationship, no privilege, and no representation. For an arrest, a serious accusation, a large loss or a deadline you could miss, get a lawyer.' },
+      { t:'It does not file anything for you', b:'Complaint drafts are drafts. Nothing is submitted to any authority by the app.' },
+      { t:'It covers Mumbai and MMR only', b:'Guidance is built for Mumbai City, Mumbai Suburban, Thane and Navi Mumbai. Outside these areas the app says so rather than applying Maharashtra rules to you.' },
+      { t:'It cannot judge who is telling the truth', b:'The app works from what you tell it. If a fact changes, the guidance can change with it.' },
+    ] },
+    faq: { label:'Common questions', body:[
+      { t:'Is my conversation saved?', b:'No, not on its own. A conversation becomes an incident only when you choose to save it, and saved incidents stay on this device.' },
+      { t:'Can I use this while being stopped?', b:'Yes, that is what live help is for. Safety comes before the app: if the situation is unsafe, deal with that first and call 112.' },
+      { t:'Should I record the officer?', b:'The app does not advise covert recording. Note names, numbers, times and places openly instead.' },
+      { t:'What if the answer is wrong?', b:'Use the report button on any answer. A reported answer is reviewed against the source it was built from.' },
+      { t:'Does it work in Hindi and Marathi?', b:'You can ask in English, Hindi or Marathi, by text or by voice. The set of laws covered does not change with the language.' },
+    ] },
+  };
+
+  PROMPTS = [
+    { text:'Police ne mujhe roka hai, kya karu?', icon:'local_police', ink:'#2166D1' },
+    { text:'Can traffic police demand cash for a challan?', icon:'traffic', ink:'#9A5B00' },
+    { text:'What should I do after a UPI fraud?', icon:'security', ink:'#B42318' },
+    { text:'My ration card application is delayed. What now?', icon:'account_balance', ink:'#344054' },
+  ];
+
+  INCIDENTS = [
+    { id:'i1', cat:'traffic', title:'Duplicate challan at Sion Circle', domain:'Traffic', status:'Active', meta:'22 Aug 2026 · Sion Circle', icon:'traffic', tint:'#FFF6E4', ink:'#9A5B00', tags:['Challan dispute','Draft ready'], group:'Active',
+      saved:'Saved 22 Aug 2026, 6:40 pm · Sion Circle, Mumbai',
+      summary:'Two e-challans were issued for the same signal violation at Sion Circle, seven minutes apart. One has been paid. The second is still showing as pending.',
+      facts:[{ k:'Category', v:'Traffic — challan dispute' },{ k:'Date and time', v:'22 Aug 2026, 5:58 pm' },{ k:'Location', v:'Sion Circle, Mumbai' },{ k:'Authority', v:'Mumbai Traffic Police' },{ k:'Challan numbers', v:'2 (one paid, one pending)' },{ k:'Reference', v:'Payment ref. on file' }],
+      timeline:[
+        { title:'Stopped at Sion Circle', when:'22 Aug 2026, 5:58 pm', dot:'#2166D1', body:'Signal violation alleged. Challan issued on the spot.' },
+        { title:'First e-challan paid online', when:'22 Aug 2026, 6:22 pm', dot:'#2E9B52', body:'Payment reference kept in evidence below.' },
+        { title:'Second e-challan appeared for the same offence', when:'22 Aug 2026, 6:29 pm', dot:'#E89A17', body:'Same location and same time window, seven minutes apart.' },
+        { title:'Saved to My Incidents', when:'22 Aug 2026, 6:40 pm', dot:'#98A2B3', body:'' }],
+      evidence:[
+        { name:'IMG_20260822_1802.jpg', meta:'Photo of the challan · on this device', icon:'image', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' },
+        { name:'payment-receipt.pdf', meta:'No longer available on this device', icon:'broken_image', ink:'#B42318', border:'#F2B8AE', bg:'#FFF7F4', metaInk:'#B42318' }] },
+
+    { id:'i2', cat:'cyber', title:'UPI debit of ₹18,400 after a fake customer-care call', domain:'Cyber', status:'Active', meta:'14 Aug 2026 · Reported to 1930', icon:'security', tint:'#FDECEC', ink:'#B42318', tags:['Bank informed','NCRP ack. pending'], group:'Active',
+      saved:'Saved 14 Aug 2026, 9:12 pm · Chembur, Mumbai',
+      summary:'A caller claiming to be from the bank obtained an approval on the phone and ₹18,400 left the account through UPI. The bank was informed the same evening and helpline 1930 was called.',
+      facts:[{ k:'Category', v:'Cyber — UPI fraud' },{ k:'Date and time', v:'14 Aug 2026, 8:41 pm' },{ k:'Amount', v:'₹18,400' },{ k:'Caller number', v:'On file' },{ k:'Bank complaint', v:'Reference on file' },{ k:'Helpline 1930', v:'Acknowledgement received' }],
+      timeline:[
+        { title:'Call received from a number claiming to be the bank', when:'14 Aug 2026, 8:41 pm', dot:'#B42318', body:'Caller said the debit card had been blocked and asked for an approval on the phone.' },
+        { title:'₹18,400 debited by UPI', when:'14 Aug 2026, 8:47 pm', dot:'#B42318', body:'SMS alert kept, untouched.' },
+        { title:'Bank informed by phone and in writing', when:'14 Aug 2026, 8:58 pm', dot:'#2E9B52', body:'Transaction marked unauthorised. Dispute reference on file.' },
+        { title:'Reported on helpline 1930', when:'14 Aug 2026, 9:06 pm', dot:'#2E9B52', body:'Acknowledgement number received.' },
+        { title:'NCRP portal complaint pending', when:'Still to do', dot:'#E89A17', body:'The portal complaint has not been filed yet.' }],
+      evidence:[
+        { name:'sms-debit-alert.png', meta:'Bank SMS alert · on this device', icon:'image', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' },
+        { name:'call-log-2041.png', meta:'Call log screenshot · on this device', icon:'image', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' }] },
+
+    { id:'i3', cat:'railway', title:'TC asked for cash without a receipt — Kurla', domain:'Mumbai Local', status:'Resolved', meta:'02 Aug 2026 · Central line', icon:'train', tint:'#E7F7F5', ink:'#126B69', tags:['Receipt obtained'], group:'Resolved',
+      saved:'Saved 02 Aug 2026, 7:55 pm · Kurla, Central line',
+      summary:'A ticket checker asked for cash without a receipt. After asking to be taken to the station manager, a proper excess-fare receipt was issued and the matter closed.',
+      facts:[{ k:'Category', v:'Railway — penalty receipt' },{ k:'Date and time', v:'02 Aug 2026, 7:20 pm' },{ k:'Line and station', v:'Central line, Kurla' },{ k:'Outcome', v:'Receipted penalty paid' },{ k:'Reference', v:'Excess-fare ticket on file' }],
+      timeline:[
+        { title:'Checked at Kurla, no valid ticket', when:'02 Aug 2026, 7:20 pm', dot:'#2166D1', body:'Cash asked for, no receipt offered.' },
+        { title:'Asked to be taken to the station manager', when:'02 Aug 2026, 7:34 pm', dot:'#E89A17', body:'Request made quietly, without an argument.' },
+        { title:'Receipted penalty issued and paid', when:'02 Aug 2026, 7:48 pm', dot:'#2E9B52', body:'Excess-fare ticket issued in the correct amount.' },
+        { title:'Marked resolved', when:'02 Aug 2026, 7:55 pm', dot:'#98A2B3', body:'' }],
+      evidence:[
+        { name:'excess-fare-receipt.jpg', meta:'Receipt photo · on this device', icon:'image', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' }] },
+
+    { id:'i4', cat:'govt', title:'Complaint about a delayed income certificate', domain:'Government / RTS', status:'Draft', meta:'28 Jul 2026 · Not sent', icon:'account_balance', tint:'#F2F4F7', ink:'#344054', tags:['RTS appeal'], group:'Drafts',
+      saved:'Saved 28 Jul 2026, 11:20 am · Setu centre, Kurla',
+      summary:'An income certificate application is well past the published timeline. The acknowledgement number is on file and a first appeal has been drafted but not sent.',
+      facts:[{ k:'Category', v:'Government — RTS delay' },{ k:'Applied on', v:'19 Jun 2026' },{ k:'Promised by', v:'04 Jul 2026' },{ k:'Days overdue', v:'24 as at 28 Jul 2026' },{ k:'Acknowledgement', v:'On file' },{ k:'Office', v:'Tahsildar, Kurla' }],
+      timeline:[
+        { title:'Application submitted online', when:'19 Jun 2026', dot:'#2166D1', body:'Acknowledgement number received the same day.' },
+        { title:'Promised delivery date passed', when:'04 Jul 2026', dot:'#E89A17', body:'Status still showing as under process.' },
+        { title:'Written status request sent to the designated officer', when:'21 Jul 2026', dot:'#2166D1', body:'No reply received.' },
+        { title:'First appeal drafted, not sent', when:'28 Jul 2026', dot:'#98A2B3', body:'' }],
+      evidence:[
+        { name:'acknowledgement.pdf', meta:'Application acknowledgement · on this device', icon:'description', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' },
+        { name:'status-screenshot-2807.png', meta:'Portal status · on this device', icon:'image', ink:'#2166D1', border:'#EAECF0', bg:'#fff', metaInk:'#667085' }] },
+  ];
+
+  LEGAL_AID = { name:'Maharashtra State Legal Services Authority', role:'Free legal aid if you qualify', what:'Advice and representation at no cost for eligible citizens, through the district legal services authority.',
+    contacts:[{ icon:'call', value:'15100', label:'Legal aid helpline' }] };
+
+  ESCALATION = {
+    traffic: [
+      { name:'Mumbai Traffic Police — grievance', role:'First stop for a challan dispute', what:'Raise the challan with the traffic branch that issued it. Quote the challan number and any payment reference.',
+        contacts:[{ icon:'language', value:'Official Mumbai Traffic Police grievance page', label:'Web · verify the URL in the app' },{ icon:'call', value:'103', label:'Traffic helpline' }] },
+      { name:'Deputy Commissioner of Police (Traffic)', role:'If there is no response in a reasonable time', what:'A written representation to the zonal DCP (Traffic), attaching the earlier grievance reference.',
+        contacts:[{ icon:'mail', value:'Written representation with the grievance reference', label:'Post or in person' }] },
+      { name:'Anti-Corruption Bureau, Maharashtra', role:'Only where cash was demanded in place of a challan', what:'A cash demand instead of an official challan is the ACB\u2019s subject matter, not the traffic branch\u2019s.',
+        contacts:[{ icon:'call', value:'1064', label:'ACB helpline' }], note:'Do not attempt a trap, a sting or covert recording yourself. Report it and let the agency act.' },
+    ],
+    police: [
+      { name:'Senior officer at the same police station', role:'First stop for conduct or procedure', what:'Ask to speak to the senior inspector in charge of the station. Many procedural problems close here.',
+        contacts:[{ icon:'call', value:'100 · 112', label:'Police control room' }] },
+      { name:'Deputy Commissioner of Police (zone)', role:'If the station does not resolve it', what:'A written complaint to the zonal DCP, naming the station, the officer and the dates.',
+        contacts:[{ icon:'mail', value:'Written complaint to the zonal DCP office', label:'Post or in person' }] },
+      { name:'Mumbai Police Commissionerate — grievance', role:'Formal complaint against police conduct', what:'The Commissionerate accepts written and online grievances about the conduct of police personnel.',
+        contacts:[{ icon:'language', value:'Official Mumbai Police grievance channel', label:'Web · verify the URL in the app' }],
+        note:'If there is any allegation of assault or custodial ill-treatment, get a lawyer involved before filing anything.' },
+    ],
+    railway: [
+      { name:'Station manager or ticket-checking supervisor', role:'Fix it while you are still at the station', what:'A refused receipt is normally resolved on the spot by the station manager.',
+        contacts:[{ icon:'call', value:'139', label:'Railway enquiry and assistance' }] },
+      { name:'RailMadad — railway grievance', role:'Official railway complaint channel', what:'File the complaint with the train number, coach, date, time and staff details.',
+        contacts:[{ icon:'language', value:'RailMadad grievance portal', label:'Web · verify the URL in the app' }] },
+      { name:'Divisional Railway Manager — Central or Western Railway', role:'If the grievance is not addressed', what:'A written representation to the divisional office administering your line, attaching the grievance reference.',
+        contacts:[{ icon:'mail', value:'Divisional Railway Manager, relevant division', label:'Post or in person' }] },
+      { name:'Railway Protection Force', role:'For theft, harassment or assault on railway premises', what:'RPF handles offences on railway property; GRP handles cognisable offences on trains and stations.',
+        contacts:[{ icon:'call', value:'182', label:'RPF security helpline' }] },
+    ],
+    govt: [
+      { name:'Designated officer for the service', role:'Ask in writing first', what:'A written status request to the designated officer creates the record an appeal needs.',
+        contacts:[{ icon:'language', value:'Aaple Sarkar — track your application', label:'Web · verify the URL in the app' }] },
+      { name:'First appellate authority', role:'Once the RTS time limit has lapsed', what:'A first appeal against non-delivery of a notified service, filed with the designated appellate officer.',
+        contacts:[{ icon:'mail', value:'First appeal form with the acknowledgement number', label:'Usually no fee' }] },
+      { name:'Maharashtra State Right to Public Service Commission', role:'Second appeal', what:'Hears second appeals where the first appeal does not resolve the matter.',
+        contacts:[{ icon:'language', value:'RTS Commission, Government of Maharashtra', label:'Web · verify the URL in the app' }] },
+      { name:'Anti-Corruption Bureau, Maharashtra', role:'Only where an unofficial payment was demanded', what:'A demand for money to move a file is the ACB\u2019s subject matter, not the department\u2019s.',
+        contacts:[{ icon:'call', value:'1064', label:'ACB helpline' }], note:'Do not attempt a trap or a sting yourself. Report it and let the agency act.' },
+    ],
+    cyber: [
+      { name:'Cyber-crime helpline 1930', role:'Do this first, within the hour if you can', what:'The fastest route to getting a financial fraud on record so downstream accounts can be flagged.',
+        contacts:[{ icon:'call', value:'1930', label:'National cyber-crime financial fraud helpline' }] },
+      { name:'National Cyber Crime Reporting Portal', role:'File the written complaint', what:'File with the transaction reference, the caller number and screenshots. Keep the acknowledgement number.',
+        contacts:[{ icon:'language', value:'National Cyber Crime Reporting Portal', label:'Web · verify the URL in the app' }] },
+      { name:'Your bank\u2019s grievance officer, then the RBI ombudsman', role:'For the money itself', what:'If the bank does not resolve the dispute, the RBI ombudsman scheme is the next step.',
+        contacts:[{ icon:'mail', value:'Bank grievance officer, with the dispute reference', label:'In writing' },{ icon:'call', value:'14448', label:'RBI complaint helpline' }] },
+      { name:'Cyber police station, Mumbai', role:'For blackmail, sextortion or threats', what:'Ongoing threats, image misuse or extortion should go to the cyber police station in person.',
+        contacts:[{ icon:'call', value:'112', label:'Emergency response' }],
+        note:'If the threat involves intimate images, do not pay and do not delete anything. Report it and get a lawyer.' },
+    ],
+  };
+
+  SETTINGS = [
+    { label:'Preferences', rows:[
+      { icon:'translate', label:'Language', dyn:'lang', ink:'#2166D1', to:'language' },
+      { icon:'notifications_active', label:'Notifications', sub:'Reminders and source updates', ink:'#9A5B00', to:'notifications' },
+      { icon:'record_voice_over', label:'Voice', sub:'Auto-play answers, speech rate', ink:'#126B69', to:'toast' },
+    ] },
+    { label:'Privacy and data', rows:[
+      { icon:'lock', label:'Privacy and data', sub:'What is stored, and where', ink:'#2166D1', to:'privacy' },
+      { icon:'download', label:'Export my incidents', sub:'A plain text copy on this device', ink:'#2166D1', to:'export' },
+      { icon:'delete_forever', label:'Delete my data', ink:'#B42318', labelInk:'#B42318', to:'deleteData' },
+    ] },
+    { label:'Understanding AILex', rows:[
+      { icon:'psychology', label:'How Legal AI works', sub:'Sources, verification and limits', ink:'#344054', to:'help:how' },
+      { icon:'help', label:'Common questions', ink:'#344054', to:'help:faq' },
+      { icon:'gavel', label:'What it cannot do', sub:'Limits and disclaimer', ink:'#344054', to:'help:limits' },
+    ] },
+  ];
+
+  DRAFTS = {
+    cyber: [
+      { label:'To', text:'The Grievance Redressal Officer\n[Bank name], Mumbai' },
+      { label:'Subject', text:'Unauthorised UPI debit of ₹18,400 on 14 August 2026 and request for reversal' },
+      { label:'Background', text:'I hold account number [account number] with your branch at [branch]. On 14 August 2026 at about 8:41 pm I received a call from a person claiming to be from your customer-care team, stating that my debit card had been blocked.' },
+      { label:'Facts', text:'1. During the call I was directed through steps on my phone which I now understand were used to authorise a transfer.\n2. At about 8:47 pm an amount of ₹18,400 was debited from my account by UPI. The transaction reference is [UPI reference].\n3. I reported the transaction to the bank the same evening at about 8:58 pm. The dispute reference is [dispute reference].\n4. I reported the matter on the national cyber-crime helpline 1930 at about 9:06 pm and hold the acknowledgement number [1930 acknowledgement].' },
+      { label:'Requested action', text:'I request that the transaction be treated as unauthorised, that the amount be reversed in accordance with the applicable Reserve Bank of India directions on customer liability, and that I be informed in writing of the outcome and the reasons for it.' },
+      { label:'Supporting information', text:'The SMS debit alert, the call log entry for the caller\u2019s number and the helpline acknowledgement are available and can be produced on request.' },
+      { label:'Contact', text:'[Your name]\n[Mobile number]\nDate: 27 August 2026' },
+    ],
+    railway: [
+      { label:'To', text:'The Divisional Railway Manager\nCentral Railway, Mumbai Division' },
+      { label:'Subject', text:'Penalty demanded without a receipt during ticket checking at Kurla on 2 August 2026' },
+      { label:'Background', text:'I was travelling on the Central line and was checked at Kurla station on 2 August 2026 at about 7:20 pm. I did not hold a valid ticket for the journey and accepted that a penalty was payable.' },
+      { label:'Facts', text:'1. The checking staff asked for cash and did not offer a receipt or an excess-fare ticket.\n2. I stated that I was willing to pay the penalty against an official receipt.\n3. On my request the matter was taken to the station manager, and a receipted penalty was issued at about 7:48 pm.\n4. The excess-fare ticket number is [ticket number].' },
+      { label:'Requested action', text:'I request that this be recorded, and that checking staff on this section be reminded that penalties are to be collected only against an official receipt. I am not seeking a refund of the penalty, which was properly payable.' },
+      { label:'Supporting information', text:'A photograph of the excess-fare receipt is available and can be produced on request.' },
+      { label:'Contact', text:'[Your name]\n[Mobile number]\nDate: 27 August 2026' },
+    ],
+    govt: [
+      { label:'To', text:'The First Appellate Authority\nUnder the Maharashtra Right to Public Services Act, 2015\nOffice of the Tahsildar, Kurla' },
+      { label:'Subject', text:'First appeal for non-delivery of an income certificate within the stipulated time limit' },
+      { label:'Background', text:'I applied for an income certificate on 19 June 2026 through the official portal. The acknowledgement number is [acknowledgement number]. The service is notified under the Maharashtra Right to Public Services Act, 2015.' },
+      { label:'Facts', text:'1. The application was submitted on 19 June 2026 and an acknowledgement was issued the same day.\n2. The published time limit for this service expired on 4 July 2026.\n3. The online status has continued to show the application as under process.\n4. I sent a written status request to the designated officer on 21 July 2026 and have received no reply.' },
+      { label:'Requested action', text:'I request that the designated officer be directed to deliver the service, and that I be informed in writing of the reason for the delay.' },
+      { label:'Supporting information', text:'A copy of the acknowledgement, the portal status screenshot and the written status request are available and can be produced on request.' },
+      { label:'Contact', text:'[Your name]\n[Mobile number]\nDate: 27 August 2026' },
+    ],
+    police: [
+      { label:'To', text:'The Deputy Commissioner of Police\n[Zone], Mumbai' },
+      { label:'Subject', text:'Representation regarding the procedure followed at [police station] on [date]' },
+      { label:'Background', text:'I was approached by police personnel on [date] at about [time] at [place] and asked to attend [police station]. No written notice was served on me at that time.' },
+      { label:'Facts', text:'1. I was stopped at [place] on [date] at about [time].\n2. I was asked to attend [police station] and was not told the subject matter.\n3. I asked for the request in writing and none was provided.\n4. The officer\u2019s name and buckle number, as noted by me, are [details].' },
+      { label:'Requested action', text:'I request that the position be examined, and that I be informed in writing whether I am required to attend and under which provision.' },
+      { label:'Supporting information', text:'The name and number of the person who was present with me are available and can be produced on request.' },
+      { label:'Contact', text:'[Your name]\n[Mobile number]\nDate: 27 August 2026' },
+    ],
+  };
+
+  DRAFT = [
+    { label:'To', text:'The Deputy Commissioner of Police (Traffic)\nMumbai Traffic Police' },
+    { label:'Subject', text:'Duplicate e-challan issued for a single alleged signal violation at Sion Circle on 22 August 2026' },
+    { label:'Background', text:'I am the registered owner of the vehicle bearing registration number [vehicle number]. On 22 August 2026 at approximately 5:58 pm I was stopped at Sion Circle, Mumbai, and a challan was issued for an alleged signal violation.' },
+    { label:'Facts', text:'1. A challan was issued at the spot on 22 August 2026 at about 5:58 pm.\n2. I paid the corresponding e-challan online at about 6:22 pm the same day. The payment reference is [payment reference].\n3. At about 6:29 pm a second e-challan appeared against the same vehicle for the same alleged offence at the same location.\n4. Both challans relate to a single incident. Only one has been paid, and the second is still shown as pending.' },
+    { label:'Requested action', text:'I request that the duplicate e-challan be examined and withdrawn, and that written confirmation be provided once the record is corrected.' },
+    { label:'Supporting information', text:'Copies of both challans, the online payment receipt and the SMS alerts are available and can be produced on request.' },
+    { label:'Contact', text:'[Your name]\n[Mobile number]\nDate: 26 August 2026' },
+  ];
+
+  PRIVACY = [
+    { icon:'phone_iphone', ink:'#2166D1', title:'Your mobile number', body:'Held on our servers as your login. No Aadhaar, address, date of birth or profession is collected.' },
+    { icon:'chat_bubble', ink:'#2166D1', title:'Conversations', body:'Sent to our servers to generate an answer. A conversation only becomes a saved incident when you choose to save it.' },
+    { icon:'mic_off', ink:'#126B69', title:'Voice', body:'Speech is converted to text and the recording is not kept. Only the text reaches the legal engine.' },
+    { icon:'devices', ink:'#9A5B00', title:'Saved incidents', body:'Stored on this device. Uninstalling the app or clearing its data removes them, and there is no cloud backup in this version.' },
+    { icon:'folder_off', ink:'#9A5B00', title:'Evidence files', body:'The app keeps a reference to a file already on your phone. Nothing is uploaded. If you move or delete the file, the reference stops working.' },
+  ];
+
+  go = (s) => this.setState({ screen: s, sheet: null, toast: null });
+  flash = (t) => { this.setState({ toast: t }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2600); };
+
+  renderVals() {
+    const st = this.state;
+    const dom = (id) => this.DOMAINS.find(d => d.id === id) || this.DOMAINS[1];
+    const cat = dom(st.cat);
+    const qs = this.QUESTIONS[st.cat] || this.QUESTIONS.traffic;
+    const q = qs[Math.min(st.qi, qs.length - 1)];
+    const res = this.RESULTS[st.cat] || this.RESULTS.traffic;
+    const doneN = Object.values(st.done).filter(Boolean).length;
+
+    const is = {};
+    ['welcome','phone','otp','name','language','home','lsSafety','lsUrgent','lsCategory','lsQuestion','lsResult',
+     'ask','askVoice','askConvo','incidents','incidentDetail','complaint','escalation','me','privacy','deleteData',
+     'freeText','notifications','help']
+      .forEach(k => { is[k] = st.screen === k; });
+    const vStage = st.voiceStage;
+    const voice = {
+      listening: vStage === 'listening',
+      hasTranscript: vStage === 'transcribing' || vStage === 'review',
+      transcript: 'Someone called saying they were from my bank and forty thousand rupees has gone out of my account through UPI.',
+      orbBg: vStage === 'listening' ? '#2C9C96' : vStage === 'transcribing' ? '#174A9C' : '#2166D1',
+      orbIcon: vStage === 'listening' ? 'graphic_eq' : vStage === 'transcribing' ? 'hourglass_top' : 'task_alt',
+      title: vStage === 'listening' ? 'Listening…' : vStage === 'transcribing' ? 'Understanding what you said…' : 'Is this right?',
+      blurb: vStage === 'listening' ? 'Speak in English, हिंदी or मराठी. Tap stop when you are done.'
+        : vStage === 'transcribing' ? 'Converting your words to text. Nothing is recorded.'
+        : 'Correct it if I misheard, then send it.',
+      btnLabel: vStage === 'listening' ? 'Stop' : vStage === 'transcribing' ? 'Cancel' : 'Send this',
+      btnIcon: vStage === 'listening' ? 'stop' : vStage === 'transcribing' ? 'close' : 'send',
+      btnBg: vStage === 'review' ? '#2166D1' : '#B42318',
+      primary: () => vStage === 'listening' ? this.setState({ voiceStage: 'transcribing' })
+        : vStage === 'transcribing' ? this.setState({ voiceStage: 'review' })
+        : this.go('askConvo'),
+    };
+    const allInc = [...st.extraIncidents, ...this.INCIDENTS].filter(i => !st.deletedIds.includes(i.id));
+    const term = st.search.trim().toLowerCase();
+    const inc = allInc
+      .filter(i => st.filter === 'All' || i.group === st.filter)
+      .filter(i => !term || (i.title + ' ' + i.domain + ' ' + i.meta + ' ' + i.tags.join(' ')).toLowerCase().includes(term));
+    const det = allInc.find(i => i.id === st.incidentId) || allInc[0] || this.INCIDENTS[0];
+    const detCat = det.cat || 'traffic';
+    const draftBase = this.DRAFTS[detCat] || this.DRAFT;
+    const draftKey = (i) => det.id + ':' + i;
+    const events = [...(det.timeline || []), ...(st.extraEvents[det.id] || [])];
+    const locIdx = this.LOCATION_Q[st.cat];
+    const place = locIdx !== undefined ? st.answers[locIdx] : undefined;
+    const placeSeg = place ? ' · ' + place : '';
+
+    return {
+      is,
+      index: this.INDEX.map((r, i) => r.g
+        ? { isGroup: true, label: r.g, active: false, idle: false, go: () => {} }
+        : { isGroup: false, label: r.l, active: st.screen === r.s, idle: st.screen !== r.s, go: () => this.go(r.s) }),
+
+      welcomePoints: ['Practical steps first, legal theory second.','Rights, obligations and authority powers kept separate.','Nothing is saved as an incident unless you say so.'],
+      phone: st.phone, onPhone: (e) => this.setState({ phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) }),
+      phoneValid: st.phone.length === 10, phoneInvalid: st.phone.length !== 10,
+      maskedPhone: '+91 ' + (st.phone ? st.phone.slice(0, 2) + 'XXX XX' + st.phone.slice(-3) : '98XXX XX210'),
+      otpCells: [0,1,2,3,4,5].map(i => ({ char: st.otp[i] || '' })),
+      fillOtp: () => this.setState({ otp: '418263' }),
+      otpValid: st.otp.length === 6, otpInvalid: st.otp.length !== 6,
+      name: st.name, onName: (e) => this.setState({ name: e.target.value.slice(0, 40) }),
+      nameValid: st.name.trim().length > 1, nameInvalid: st.name.trim().length <= 1,
+      firstName: (st.name.trim().split(' ')[0]) || 'Rohan',
+      languages: [
+        { key:'English', label:'English', native:'Recommended for this release', icon:'translate' },
+        { key:'Hindi', label:'Hindi', native:'हिंदी', icon:'translate' },
+        { key:'Marathi', label:'Marathi', native:'मराठी', icon:'translate' },
+      ].map(l => ({ ...l, pick: () => this.setState({ lang: l.key }),
+        border: st.lang === l.key ? '#2166D1' : '#EAECF0', bg: st.lang === l.key ? '#F5F8FF' : '#fff' })),
+
+      goWelcome: () => this.go('welcome'), goPhone: () => this.go('phone'), goOtp: () => this.go('otp'),
+      goName: () => this.go('name'), goLanguage: () => this.go('language'), goHome: () => this.go('home'),
+      goAsk: () => this.go('ask'), goIncidents: () => this.go('incidents'), goMe: () => this.go('me'),
+      goPrivacy: () => this.go('privacy'), goDelete: () => this.go('deleteData'),
+      goIncidentDetail: () => this.go('incidentDetail'), goComplaint: () => this.setState({ screen: 'complaint', editing: false, sheet: null }),
+      goEscalation: () => this.setState({ screen: 'escalation', escFrom: st.screen, sheet: null,
+        cat: st.screen === 'askConvo' ? 'cyber' : st.cat }),
+      goEscalationScreen: () => this.setState({ screen: 'escalation', escFrom: 'incidentDetail', sheet: null, cat: detCat }),
+      escBack: () => this.go(st.escFrom || 'lsResult'),
+      toastSoon: () => this.flash('Not built in this pass.'),
+
+      prompts: this.PROMPTS.map(p => ({ ...p, pick: () => this.go('askConvo') })),
+      startVoice: () => this.setState({ screen: 'askVoice', voiceStage: 'listening', sheet: null }),
+      sendDemo: () => this.go('askConvo'),
+      voice,
+      convoSteps: [
+        { n:'1', text:'Call your bank\u2019s official number and report an unauthorised transaction.', note:'Use the number on your card or passbook, never a number from the caller.' },
+        { n:'2', text:'Report on the national cyber-crime helpline 1930 and get an acknowledgement number.', note:'The sooner a report is on record, the better the chance of a hold on the money.' },
+        { n:'3', text:'File the complaint on the National Cyber Crime Reporting Portal as well.', note:'Keep the acknowledgement. Every later step will ask for it.' },
+        { n:'4', text:'Freeze or change UPI access on the affected account.', note:'Through your bank or the UPI app\u2019s own security settings.' },
+      ],
+      convoSources: [
+        { title:'RBI — customer liability in unauthorised electronic transactions', excerpt:'Customer liability in an unauthorised electronic banking transaction depends on the type of negligence and how quickly the customer notifies the bank.', meta:'Reserve Bank of India · last verified 09 Aug 2026' },
+        { title:'National Cyber Crime Reporting Portal and helpline 1930', excerpt:'Official route for reporting cyber financial fraud, operated with the Ministry of Home Affairs.', meta:'Government of India · last verified 09 Aug 2026' },
+      ],
+      convoLegalOpen: st.convoLegal,
+      convoLegalChevron: st.convoLegal ? 'expand_less' : 'expand_more',
+      toggleConvoLegal: () => this.setState({ convoLegal: !st.convoLegal }),
+      convoChips: ['I entered my UPI PIN','I only shared an OTP','I installed an app they sent','I am not sure']
+        .map(l => ({ label: l, pick: () => this.flash('Follow-up recorded. Next fact only if it changes the answer.') })),
+      speakLabel: st.speaking ? 'Stop' : 'Play',
+
+      filters: ['All','Active','Resolved','Drafts'].map(f => ({ label: f,
+        pick: () => this.setState({ filter: f }),
+        border: st.filter === f ? '#2166D1' : '#D0D5DD',
+        bg: st.filter === f ? '#EAF2FF' : '#fff',
+        ink: st.filter === f ? '#174A9C' : '#475467' })),
+      incidentList: inc.map(i => ({ ...i,
+        statusBg: i.status === 'Resolved' ? '#EAF7EE' : i.status === 'Draft' ? '#F2F4F7' : '#FFF6E4',
+        statusInk: i.status === 'Resolved' ? '#18733A' : i.status === 'Draft' ? '#475467' : '#9A5B00',
+        go: () => this.setState({ screen: 'incidentDetail', incidentId: i.id, editing: false }) })),
+      hasResults: inc.length > 0, noResults: inc.length === 0,
+      resultCount: inc.length === allInc.length ? allInc.length + ' saved' : inc.length + ' of ' + allInc.length,
+      searchOpen: st.searchOpen, search: st.search,
+      toggleSearch: () => this.setState({ searchOpen: !st.searchOpen, search: '' }),
+      onSearch: (e) => this.setState({ search: e.target.value }),
+      clearSearch: () => this.setState({ search: '' }),
+
+      det: { domain: det.domain, status: det.status, ink: det.ink, tint: det.tint, title: det.title, saved: det.saved, summary: det.summary,
+        statusBg: det.status === 'Resolved' ? '#EAF7EE' : det.status === 'Draft' ? '#F2F4F7' : '#FFF6E4',
+        statusInk: det.status === 'Resolved' ? '#18733A' : det.status === 'Draft' ? '#475467' : '#9A5B00',
+        hasEvidence: (det.evidence || []).length > 0, noEvidence: (det.evidence || []).length === 0 },
+      detailFacts: det.facts || [],
+      timeline: events,
+      evidence: det.evidence || [],
+      note: st.notes[det.id] || '',
+      onNote: (e) => this.setState({ notes: { ...st.notes, [det.id]: e.target.value } }),
+      saveNote: () => (st.notes[det.id] || '').trim() ? this.flash('Note saved to this incident.') : this.flash('Nothing to save yet.'),
+      openTimeline: () => this.setState({ sheet: 'timeline', eventText: '' }),
+      eventText: st.eventText, onEventText: (e) => this.setState({ eventText: e.target.value }),
+      eventReady: st.eventText.trim().length > 2, eventNotReady: st.eventText.trim().length <= 2,
+      addEvent: () => {
+        const list = st.extraEvents[det.id] || [];
+        this.setState({ sheet: null, eventText: '',
+          extraEvents: { ...st.extraEvents, [det.id]: [...list, { title: st.eventText.trim(), when: '27 Aug 2026, added by you', dot:'#2166D1', body:'' }] } });
+        this.flash('Timeline event added.');
+      },
+      askDelete: () => this.setState({ sheet: 'delete' }),
+      doDeleteIncident: () => { this.setState({ screen: 'incidents', sheet: null, deletedIds: [...st.deletedIds, det.id] }); this.flash('Incident deleted from this device.'); },
+
+      draftTitle: det.domain, draftFor: det.title,
+      draftSections: draftBase.map((d, i) => ({ label: d.label,
+        text: st.drafts[draftKey(i)] !== undefined ? st.drafts[draftKey(i)] : d.text,
+        editing: st.editing, reading: !st.editing,
+        onChange: (e) => this.setState({ drafts: { ...st.drafts, [draftKey(i)]: e.target.value } }) })),
+      draftEdited: Object.keys(st.drafts).some(k => k.indexOf(det.id + ':') === 0),
+      resetDraft: () => {
+        const next = { ...st.drafts };
+        Object.keys(next).forEach(k => { if (k.indexOf(det.id + ':') === 0) delete next[k]; });
+        this.setState({ drafts: next });
+        this.flash('Draft reset to the generated version.');
+      },
+
+      notifications: this.NOTIFICATIONS.map(n => ({ ...n,
+        weight: n.unread ? '700' : '500',
+        go: () => n.to ? this.setState({ screen: 'incidentDetail', incidentId: n.to, sheet: null }) : this.flash('No incident attached to this one.') })),
+      unreadCount: String(this.NOTIFICATIONS.filter(n => n.unread).length),
+      hasUnread: this.NOTIFICATIONS.some(n => n.unread),
+      goNotifications: () => this.go('notifications'),
+
+      helpTabs: Object.keys(this.HELP).map(k => ({ label: this.HELP[k].label, pick: () => this.setState({ helpTopic: k }),
+        border: st.helpTopic === k ? '#2166D1' : '#D0D5DD', bg: st.helpTopic === k ? '#EAF2FF' : '#fff',
+        ink: st.helpTopic === k ? '#174A9C' : '#475467' })),
+      helpBody: (this.HELP[st.helpTopic] || this.HELP.how).body,
+      goHelp: (topic) => this.setState({ screen: 'help', helpTopic: topic || 'how' }),
+      editLabel: st.editing ? 'Done' : 'Edit',
+      toggleEdit: () => this.setState({ editing: !st.editing }),
+      copyDraft: () => this.flash('Draft copied to clipboard.'),
+      shareDraft: () => this.flash('Opening the Android share sheet.'),
+
+      escTitle: st.escFrom === 'incidentDetail' ? det.domain : cat.label,
+      authorities: [...(this.ESCALATION[st.cat] || this.ESCALATION.traffic), this.LEGAL_AID].map((a, i) => ({ ...a, step: String(i + 1),
+        border: i === 0 ? '#D6E4FB' : '#EAECF0', headBg: i === 0 ? '#F5F8FF' : '#fff',
+        stepBg: i === 0 ? '#2166D1' : '#F2F4F7', stepInk: i === 0 ? '#fff' : '#475467' })),
+
+      lang: st.lang,
+      initials: ((st.name.trim() || 'Rohan Kale').split(' ').map(w => w[0]).join('').slice(0, 2)).toUpperCase(),
+      settingGroups: this.SETTINGS.map(g => ({ label: g.label, rows: g.rows.map(r => ({ ...r,
+        labelInk: r.labelInk || '#101828',
+        value: r.dyn === 'lang' ? st.lang : r.value,
+        go: () => {
+          if (r.to === 'toast') return this.flash('Not built in this pass.');
+          if (r.to === 'export') return this.flash('Exported ' + allInc.length + ' incidents to this device.');
+          if (r.to === 'language') return this.setState({ sheet: 'language' });
+          if (r.to.indexOf('help:') === 0) return this.setState({ screen: 'help', helpTopic: r.to.split(':')[1] });
+          return this.go(r.to);
+        } })) })),
+      privacyRows: this.PRIVACY,
+      deleteRows: [
+        { label:'Saved incidents', count: String(allInc.length) },
+        { label:'Notes and timeline events', count:'11' },
+        { label:'Complaint drafts', count:'2' },
+        { label:'Profile and mobile number', count:'1' },
+      ],
+      delText: st.delText, onDelText: (e) => this.setState({ delText: e.target.value.toUpperCase().slice(0, 6) }),
+      delReady: st.delText === 'DELETE', delNotReady: st.delText !== 'DELETE',
+      doDelete: () => { this.setState({ screen: 'welcome', delText: '', name: '', phone: '', otp: '',
+        extraIncidents: [], deletedIds: this.INCIDENTS.map(i => i.id), notes: {}, drafts: {}, extraEvents: {} });
+        this.flash('Everything deleted. You are signed out.'); },
+      startLive: () => this.go('lsSafety'), goSafety: () => this.go('lsSafety'), goUrgent: () => this.go('lsUrgent'),
+      goCategory: () => this.go('lsCategory'), openCoverage: () => this.setState({ sheet: 'coverage' }),
+      closeSheet: () => this.setState({ sheet: null }),
+      openSave: () => this.setState({ sheet: 'save' }),
+      doSave: () => {
+        const id = 'n' + (st.extraIncidents.length + 1);
+        const now = '27 Aug 2026';
+        const rec = {
+          id, cat: st.cat, title: res.title, domain: cat.label, status: 'Active',
+          meta: now + placeSeg, icon: cat.icon, tint: cat.tint, ink: cat.ink,
+          tags: ['Saved from live help', 'Action plan open'], group: 'Active',
+          saved: 'Saved ' + now + ', 4:12 pm' + placeSeg,
+          summary: res.situation,
+          facts: [{ k:'Category', v: cat.label }, { k:'Saved', v: now + ', 4:12 pm' },
+            ...Object.keys(st.answers).map(k => ({ k: (qs[k] && qs[k].q) || 'Answer', v: String(st.answers[k]) }))],
+          timeline: [{ title:'Situation recorded from live help', when: now + ', 4:12 pm', dot:'#2166D1', body: res.situation }],
+          evidence: [],
+        };
+        this.setState({ sheet: null, savedCount: st.savedCount + 1, extraIncidents: [rec, ...st.extraIncidents], incidentId: id });
+        this.flash('Incident saved to this device.');
+      },
+
+      urgentCues: ['Quick guidance','Know your rights','Stay safe'],
+      domains: this.DOMAINS.map((d, i) => ({ ...d, span: i === 4 ? 'span 2' : 'auto',
+        go: () => this.setState({ screen: 'lsCategory', cat: d.id }) })),
+      recent: allInc.slice(0, 2).map(r => ({ title: r.title, icon: r.icon, tint: r.tint, ink: r.ink,
+        meta: r.meta + ' · ' + r.status,
+        go: () => this.setState({ screen: 'incidentDetail', incidentId: r.id, editing: false }) })),
+      hasRecent: allInc.length > 0, noRecent: allInc.length === 0,
+
+      emergency: this.EMERGENCY,
+      liveCats: [...this.DOMAINS, { id:'other', label:'Something else', blurb:'Describe it in your own words', icon:'more_horiz', tint:'#F2F4F7', ink:'#475467' }]
+        .map(c => ({ ...c, pick: () => this.setState({ screen: 'lsQuestion', cat: c.id === 'other' ? 'traffic' : c.id, qi: 0, answers: {} }) })),
+
+      qCatLabel: cat.label, qIcon: cat.icon, qTint: cat.tint, qInk: cat.ink,
+      qText: q.q, qWhy: q.why, qCounter: 'Question ' + (st.qi + 1) + ' of ' + qs.length,
+      qProgress: Math.round(((st.qi + 1) / qs.length) * 100) + '%',
+      qOptions: q.options.map(o => ({ label: o, pick: () => {
+        const nx = st.qi + 1;
+        if (nx >= qs.length) this.setState({ screen: 'lsResult', answers: { ...st.answers, [st.qi]: o } });
+        else this.setState({ qi: nx, answers: { ...st.answers, [st.qi]: o } });
+      } })),
+      qBack: () => st.qi === 0 ? this.go('lsCategory') : this.setState({ qi: st.qi - 1 }),
+      qSkip: () => this.setState({ screen: 'freeText', freeText: '' }),
+      freeText: st.freeText,
+      onFreeText: (e) => this.setState({ freeText: e.target.value }),
+      freeReady: st.freeText.trim().length > 2, freeNotReady: st.freeText.trim().length <= 2,
+      freeSubmit: () => {
+        const nx = st.qi + 1;
+        const a = { ...st.answers, [st.qi]: st.freeText.trim() };
+        if (nx >= qs.length) this.setState({ screen: 'lsResult', answers: a, freeText: '' });
+        else this.setState({ screen: 'lsQuestion', qi: nx, answers: a, freeText: '' });
+      },
+      freeBack: () => this.go('lsQuestion'),
+
+      speakIcon: st.speaking ? 'stop_circle' : 'volume_up',
+      toggleSpeak: () => this.setState({ speaking: !st.speaking }),
+      toast: st.toast,
+      sheet: { save: st.sheet === 'save', coverage: st.sheet === 'coverage', delete: st.sheet === 'delete',
+        timeline: st.sheet === 'timeline', language: st.sheet === 'language', textSize: st.sheet === 'textSize' },
+      openLanguage: () => this.setState({ sheet: 'language' }),
+      langOptions: ['English','हिंदी (Hindi)','मराठी (Marathi)'].map(l => ({ label: l,
+        pick: () => { this.setState({ lang: l.split(' ')[0], sheet: null }); this.flash('Language set to ' + l + '.'); },
+        border: st.lang === l.split(' ')[0] ? '#2166D1' : '#EAECF0',
+        bg: st.lang === l.split(' ')[0] ? '#F5F8FF' : '#fff' })),
+
+      res: {
+        title: res.title, highRisk: res.highRisk, safety: res.safety, situation: res.situation, facts: res.facts,
+        escalationBlurb: res.escalationBlurb,
+        doneLabel: doneN ? doneN + ' of ' + res.steps.length + ' done.' : '',
+        saveMeta: 'Today, 4:12 pm' + placeSeg + ' · ' + cat.label,
+        steps: res.steps.map((s, i) => {
+          const on = !!st.done[i];
+          return { ...s, badge: on ? '✓' : String(i + 1),
+            bg: on ? '#EAF7EE' : '#fff', border: on ? '#C7E9D3' : '#EAECF0',
+            numBg: on ? '#2E9B52' : '#EAF2FF', numInk: on ? '#fff' : '#174A9C',
+            ink: on ? '#18733A' : '#101828',
+            toggle: () => this.setState({ done: { ...st.done, [i]: !on } }) };
+        }),
+        sections: res.sections.map(sec => {
+          const open = !!st.open[sec.id];
+          return { ...sec, open, chevron: open ? 'expand_less' : 'expand_more',
+            border: open ? '#D0D5DD' : '#EAECF0', headBg: open ? '#F8FAFC' : '#fff',
+            items: sec.items || [], sources: sec.sources || [], hasSources: !!(open && sec.hasSources),
+            toggle: () => this.setState({ open: { ...st.open, [sec.id]: !open } }) };
+        }),
+      },
+
+      showNav: ['home','ask','incidents','me'].includes(st.screen) && !st.sheet,
+      tabs: [
+        { id:'home', label:'Home', icon:'home' },
+        { id:'ask', label:'Ask AI', icon:'forum' },
+        { id:'incidents', label:'Incidents', icon:'folder_open' },
+        { id:'me', label:'Me', icon:'person' },
+      ].map(t => ({ ...t, ink: st.screen === t.id ? '#174A9C' : '#667085',
+        pill: st.screen === t.id ? '#EAF2FF' : 'transparent',
+        go: () => this.go(t.id) })),
+    };
+  }
+}
+</script>
+</body>
+</html>
