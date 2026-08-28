@@ -65,7 +65,7 @@ Cross-cutting session state (`AppViewModel`), the shared incidents list (`Incide
 - **Shape**: new `ui/theme/Shape.kt` — `RadiusSheet`/`RadiusCardLg`/`RadiusCard`/`RadiusCardSm`/`RadiusField`/`RadiusChip`/`RadiusPill` plus matching `Shape*` `RoundedCornerShape`s. `Theme.kt`'s stock `Shapes` block now sources from these.
 - **Spacing**: `ui/theme/Spacing.kt` gained the new 4dp-base scale (`space1`…`space8`) and named screen/card/control dimensions (`screenHorizontal`, `cardPadding`, `buttonHeightPrimary/Secondary`, `inputHeight`, `navBarHeight`, etc.) alongside the old `xs`…`xxl` scale.
 - Each of the 5 `LegalDomain`s now carries the new spec's exact tint/ink pair (`DomainAccents` in `Color.kt`) and blurb copy; Government's tile changed from an amber wash to a neutral gray one (`Line100`/`Ink700`) per the new domain accent table.
-- Icon set: `material-icons-extended` **added** (README's explicit instruction, superseding the design.md-era decision to avoid it). `domainIcon()` resolves to real Material icons (`LocalPolice`, `Traffic`, `Train`, `AccountBalance`, `Security`). `AilexIcons.Mic` (hand-built) and `AppMark` (hand-built hexagon mark) are kept — they have no Material-icon equivalent, not migration debt.
+- Icon set: `material-icons-extended` **added** (README's explicit instruction, superseding the design.md-era decision to avoid it). `domainIcon()` resolves to real Material icons (`LocalPolice`, `Traffic`, `Train`, `AccountBalance`, `Security`). `AilexIcons.Mic` (hand-built) is kept — no Material-icon equivalent, not migration debt. `AppMark` was a hand-built hexagon mark until 2026-08-28, when it was replaced by the real shield-and-cross logo (`drawable/app_mark.png`).
 - **Elevation**: every card is a flat 1dp border, no elevation — borders, not shadows, do the work. No screen still uses `shadowElevation`.
 
 ### Navigation map
@@ -133,6 +133,13 @@ Never fabricated, anywhere: legal advice/citations/statute text, phone numbers/s
 ---
 
 ## Changelog
+
+### 2026-08-28 — Real app icon and brand mark (shield-and-cross logo)
+Replaced the default Android-robot launcher icon and the hand-built abstract hexagon mark on the Welcome screen with the user-supplied shield-and-cross logo.
+
+- **Launcher icon**: generated from the source PNG (trimmed to content, Pillow) — adaptive icon foreground/monochrome PNGs at all 5 densities (`mipmap-{m,h,xh,xxh,xxx}hdpi/ic_launcher_foreground.png` + `ic_launcher_monochrome.png` for Android 13+ themed icons), flat legacy `ic_launcher.png`/`ic_launcher_round.png` (white background, circular-masked for round) for pre-adaptive-icon fallback. `mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` now point at these instead of the default template's vector drawables; background is a plain white `@color/ic_launcher_background`. The old debug-grid vector drawables (`drawable/ic_launcher_background.xml`, `ic_launcher_foreground.xml`) are deleted.
+- **`AppMark` (Welcome screen)**: `ui/components/AppMark.kt` now renders `drawable/app_mark.png` (the same source logo, trimmed) via `Image`/`painterResource` at a fixed 66×72dp, replacing the hand-built `Navy900` hexagon + Material `Balance` icon. That hexagon was deliberately abstract "so it never reads as an official government emblem" (see the old code comment) — this change is a deliberate user-requested override of that choice, not an oversight.
+- Verified on-device: launcher icon renders correctly through the OEM's adaptive squircle mask, Welcome screen shows the new mark, no crashes in logcat.
 
 ### 2026-08-28 — Incidents tab audit: fixed stale search query bug
 Checked the Incidents tab (list, filters, search, detail, complaint draft, escalation, delete) end-to-end on a physical device.
