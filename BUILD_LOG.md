@@ -16,18 +16,28 @@ It is a plain Markdown file, not referenced by any Gradle module, resource, or s
 Mumbai Legal Rights AI ("Ailex") — a **local-only** native Android app for everyday legal situations in Mumbai (police stops, traffic challans, railway/Mumbai Local issues, government services, cyber incidents). Kotlin + Jetpack Compose + Material 3, package `com.example.ailex`.
 
 - 8 feature packages, 24 navigable routes, ~21 shared UI components — the full design_handoff_ailex_v1 rebuild (24 screens) is now complete; the design.md-era component/token generation has been fully retired
-- No backend, no network calls, no AI model, no auth service — everything is real, navigable UI over in-memory state
+- The **Android app itself** still has no backend, no network calls, no AI model, no auth service — everything in `app/` is real, navigable UI over in-memory state. A separate `backend/` Cloudflare Worker + Supabase project was added 2026-08-28 (see below) but is **not yet wired to the app**.
 - minSdk 24 / targetSdk 36, Compose BOM 2024.09.00, Kotlin 2.0.21, Navigation Compose 2.8.5
 
-### Hard constraints (still true, re-verified after every change)
+### Backend (in progress, 2026-08-28 → )
 
-- Local-only: no git remote, no backend, no Supabase/Cloudflare/cloud services, no network calls.
-- No real authentication. Welcome → Mobile → OTP → Name → Language validates input *shape* only (10-digit number, 6-digit code) and advances local nav state. Nothing is transmitted.
+A `backend/` Cloudflare Worker (Hono + `@supabase/supabase-js`, TypeScript) was added at the user's explicit request, overriding the local-only constraint below. Full setup/architecture in `backend/README.md`. Status:
+
+- ✅ Worker scaffolded: `/health` (public), `/incidents`, `/profile`, `/notifications` (all require `Authorization: Bearer <supabase access token>`). Every DB query runs through Postgres RLS as the calling user — the Worker never holds a service-role key.
+- ✅ `backend/schema.sql` — Postgres tables (`incidents`, `profiles`, `notifications`) + RLS policies, ready to run in Supabase's SQL editor.
+- ✅ Locally verified: `npm install`, `tsc --noEmit`, `wrangler deploy --dry-run`, and `wrangler dev` all succeed; `GET /health` → `200 {"ok":true}`, `GET /incidents` without a token → `401`.
+- ⬜ Not deployed yet — needs the user's own `wrangler login` + Supabase URL/anon key (`wrangler secret put`) + running `schema.sql` + enabling Supabase's Phone auth provider with an SMS provider (Twilio/MessageBird/Vonage).
+- ⬜ Android app not wired up yet — no Supabase Auth client, no HTTP client calling this Worker. `AuthViewModel`, `IncidentsViewModel`, `NotificationsViewModel`, `AppViewModel` are all still pure in-memory `StateFlow`s. This is the next step once the Worker is deployed and confirmed reachable.
+
+### Hard constraints (see CLAUDE.md — two of these are being deliberately relaxed; re-verify the rest after every change)
+
+- ~~Local-only: no git remote, no backend, no Supabase/Cloudflare/cloud services, no network calls~~ — relaxed 2026-08-28 (see Backend, above). `app/` has zero network calls today; that's expected to change as the backend work continues, not a bug.
+- ~~No real authentication~~ — relaxed 2026-08-28, same reason. Welcome → Mobile → OTP → Name → Language *currently* still validates input *shape* only (10-digit number, 6-digit code) and advances local nav state — nothing is transmitted yet.
 - No AI API keys, no live model. **Ask Legal AI** returns one fixed placeholder reply per message, never generated content.
 - No OCR, no continuous background voice capture — the mic control is a purely visual state machine.
 - No fabricated legal content, citations, phone numbers, or URLs anywhere. See "Content safety" below.
 - No business logic in Compose UI — screens are dumb renderers over `ViewModel`s exposing `StateFlow<UiState<T>>`.
-- All state is in-memory only (no DataStore/Room yet) — resets on process death.
+- All state is in-memory only (no DataStore/Room yet) — resets on process death. (Will change once the backend is wired up.)
 
 ### Architecture
 
@@ -133,6 +143,16 @@ Never fabricated, anywhere: legal advice/citations/statute text, phone numbers/s
 ---
 
 ## Changelog
+
+### 2026-08-28 — Backend scaffolding: Cloudflare Worker + Supabase (not yet wired to the app)
+User explicitly requested moving off local-only storage/auth onto Supabase (database) + a Cloudflare Worker (backend API), overriding the hard constraint that previously forbade this — see CLAUDE.md and Current State → Backend, above, for the exact status.
+
+- New `backend/` directory: a Cloudflare Worker project (Hono router, TypeScript, `@supabase/supabase-js`) — independent of the Gradle build, doesn't touch `app/`.
+- Auth design: the Android app will sign in **directly** against Supabase Auth (phone/OTP) rather than through the Worker; the Worker only handles the data API. Every Worker request carries the user's own Supabase access token, and the Worker creates its Supabase client scoped to that token — so Postgres RLS enforces per-user isolation and the Worker never needs (or gets) the `service_role` key. This was a deliberate simplification over routing auth through a custom backend.
+- `backend/schema.sql`: `incidents` (mirrors `domain.incident.Incident`), `profiles` (mirrors `AppViewModel`'s `AppSessionState`), `notifications` (mirrors `NotificationsViewModel`'s `AppNotification`) — each with an RLS policy scoped to `auth.uid()`.
+- `backend/README.md`: full step-by-step (install → `wrangler login` → Supabase URL/anon key → run `schema.sql` → enable Phone auth provider → local dev via `.dev.vars` → `wrangler secret put` + `wrangler deploy`) plus the API table.
+- Verified locally: `tsc --noEmit` clean, `wrangler deploy --dry-run` bundles (787KB / 157KB gzip, no binding errors), `wrangler dev` serves `GET /health` → `200 {"ok":true}` and `GET /incidents` (no token) → `401` as expected. Not deployed to Cloudflare — that requires the user's own `wrangler login` and Supabase credentials, which weren't shared with the assistant.
+- **Explicitly not done in this pass**: no Android code was touched. The app's auth flow, `IncidentsViewModel`, `NotificationsViewModel`, and `AppViewModel` are unchanged and still fully in-memory. Wiring the app to this backend (Supabase Auth SDK, an HTTP client for the Worker's API, replacing each ViewModel's in-memory `StateFlow` with real network state incl. loading/error handling) is a separate, larger follow-up once the user has deployed the Worker and confirmed it's reachable.
 
 ### 2026-08-28 — Real app icon and brand mark (shield-and-cross logo)
 Replaced the default Android-robot launcher icon and the hand-built abstract hexagon mark on the Welcome screen with the user-supplied shield-and-cross logo.

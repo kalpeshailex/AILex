@@ -11,8 +11,9 @@
 
 ## Hard constraints (do not relax without the user explicitly asking)
 
-- Local-only: no backend, no cloud services (Supabase/Cloudflare/etc.), no network calls.
-- No real authentication, AI API/model, OCR, or continuous background voice capture.
+- ~~Local-only: no backend, no cloud services, no network calls~~ — **relaxed 2026-08-28, explicitly requested by the user.** A Cloudflare Worker + Supabase backend is being added (see `backend/README.md`). As of that date the Worker/schema exist but the Android app itself is **not yet wired up** — it still runs entirely in-memory. Don't assume network calls exist in `app/` until BUILD_LOG.md says a given ViewModel was migrated off in-memory state.
+- ~~No real authentication~~ — same exception: real phone/OTP auth via Supabase Auth is the intended replacement for the current fake flow, but that migration hasn't happened yet either.
+- No AI API/model, OCR, or continuous background voice capture — still true; not part of the current backend work.
 - No fabricated legal content, citations, phone numbers, or URLs anywhere in the app.
 - No business logic in Compose UI — screens stay dumb renderers over ViewModels.
 
