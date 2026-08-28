@@ -16,8 +16,18 @@ It is a plain Markdown file, not referenced by any Gradle module, resource, or s
 Mumbai Legal Rights AI ("Ailex") — a **local-only** native Android app for everyday legal situations in Mumbai (police stops, traffic challans, railway/Mumbai Local issues, government services, cyber incidents). Kotlin + Jetpack Compose + Material 3, package `com.example.ailex`.
 
 - 8 feature packages, 24 navigable routes, ~21 shared UI components — the full design_handoff_ailex_v1 rebuild (24 screens) is now complete; the design.md-era component/token generation has been fully retired
-- The **Android app itself** still has no backend, no network calls, no AI model, no auth service — everything in `app/` is real, navigable UI over in-memory state. A separate `backend/` Cloudflare Worker + Supabase project was added 2026-08-28 (see below) but is **not yet wired to the app**.
+- The Android app now has **real authentication** (Supabase Auth, email OTP — see Auth, below) but everything else (incidents, notifications, profile data) is still in-memory UI with no AI model. A separate `backend/` Cloudflare Worker + Supabase project was added 2026-08-28 (see below) but is **not yet wired to the app** for data.
 - minSdk 24 / targetSdk 36, Compose BOM 2024.09.00, Kotlin 2.0.21, Navigation Compose 2.8.5
+
+### Auth (real, 2026-08-29 → )
+
+The Welcome screen offers two sign-in methods, both against Supabase Auth directly (no SMS/email provider config lives in the app):
+
+- **Email OTP — working end-to-end**, verified on-device. Welcome → "Continue with email" → `EmailScreen` → `AuthViewModel.sendCode()` calls `SupabaseAuthApi.sendEmailOtp()` (plain OkHttp + `org.json` against `POST /auth/v1/otp` — no Supabase SDK; see `core/network/SupabaseAuthApi.kt` for why) → user receives a code by email → `OtpScreen` → `verifyCode()` → `POST /auth/v1/verify` → session (access token + user id) stored in `AppViewModel.state.accessToken`.
+- **Phone OTP — UI exists, not functional**: same code path (`sendPhoneOtp`/`verifyPhoneOtp`), but the Supabase project has no SMS provider configured, so it fails with a real (not fabricated) "unsupported phone provider" error surfaced from `AuthFormState.errorMessage`. Will start working the moment an SMS provider (Twilio/MessageBird/Vonage) is added in Supabase — no app changes needed.
+- **OTP length is project-configurable, not hardcoded**: this Supabase project sends 8-character codes (not Supabase's historical 6-digit default), so the app reads a single `OtpLength` constant (`features/auth/AuthViewModel.kt`) used everywhere — the OTP screen's box count, input truncation, and validation. If the Supabase project's OTP length setting changes, update that one constant.
+- Getting real delivery working end-to-end required two Supabase-side configuration steps beyond the app code, both one-time dashboard settings: (1) custom SMTP (Resend) — Supabase's dashboard won't let you edit an email template's raw HTML source without one configured, and its default shared mailer is unreliable for real use; (2) editing the "Confirm signup" and "Magic Link" email templates to include `{{ .Token }}` — Supabase's default templates only show a `{{ .ConfirmationURL }}` link, not the bare code the app's OTP screen expects.
+- **Not done**: session persistence (the access token is in-memory only, same as everything else — lost on process death, no refresh-token flow yet), and the Worker backend (below) still isn't wired to use this session for the data API.
 
 ### Backend (in progress, 2026-08-28 → )
 
@@ -31,8 +41,8 @@ A `backend/` Cloudflare Worker (Hono + `@supabase/supabase-js`, TypeScript) was 
 
 ### Hard constraints (see CLAUDE.md — two of these are being deliberately relaxed; re-verify the rest after every change)
 
-- ~~Local-only: no git remote, no backend, no Supabase/Cloudflare/cloud services, no network calls~~ — relaxed 2026-08-28 (see Backend, above). `app/` has zero network calls today; that's expected to change as the backend work continues, not a bug.
-- ~~No real authentication~~ — relaxed 2026-08-28, same reason. Welcome → Mobile → OTP → Name → Language *currently* still validates input *shape* only (10-digit number, 6-digit code) and advances local nav state — nothing is transmitted yet.
+- ~~Local-only: no git remote, no backend, no Supabase/Cloudflare/cloud services, no network calls~~ — relaxed 2026-08-28. `app/` now makes real network calls to Supabase Auth (see Auth, above); the Worker/data-API side (Backend, below) is built but not yet called from the app.
+- ~~No real authentication~~ — relaxed 2026-08-28. Email OTP is real and working (see Auth, above) — a verified Supabase Auth session, not shape-only validation. Phone OTP still only validates shape, pending an SMS provider.
 - No AI API keys, no live model. **Ask Legal AI** returns one fixed placeholder reply per message, never generated content.
 - No OCR, no continuous background voice capture — the mic control is a purely visual state machine.
 - No fabricated legal content, citations, phone numbers, or URLs anywhere. See "Content safety" below.
@@ -143,6 +153,19 @@ Never fabricated, anywhere: legal advice/citations/statute text, phone numbers/s
 ---
 
 ## Changelog
+
+### 2026-08-29 — Real email OTP authentication (Supabase Auth), wired into the app
+User asked for real auth with an email option (they don't have an SMS provider set up), replacing the fake shape-only OTP validation for at least one path. Both phone and email are now offered on Welcome; only email actually delivers a code today.
+
+- **New**: `core/network/SupabaseAuthApi.kt` — plain OkHttp + `org.json` calls to Supabase Auth's REST API (`/auth/v1/otp`, `/auth/v1/verify`). Deliberately not the official multiplatform Supabase Kotlin SDK: its transitive dependencies require a newer Kotlin toolchain than this project uses (hit a real `kotlin_module` binary-metadata-version incompatibility trying `okhttp` 5.x for the same reason — settled on `okhttp:4.12.0`, which is Kotlin-toolchain-safe and doesn't bump the project's `compileSdk` requirement).
+- **`AuthViewModel`**: added `AuthMethod` (PHONE/EMAIL), `sendCode()`/`verifyCode()` real network calls with loading/error state (`isSending`, `isVerifying`, `errorMessage`) — replacing the old purely-local validation. `OtpLength` is now a single named constant (currently 8, matching this Supabase project's configured OTP length) instead of a hardcoded 6 scattered across validation, box count, and copy.
+- **New `EmailScreen.kt`**, `WelcomeScreen` now offers both entry points, `OtpScreen`/`NameScreen` generalized to show the right masked contact and "Email verified"/"Number verified" copy per method (`NameScreen` previously always said "Number verified" — fixed after the user caught it mid-testing).
+- **`AppSessionState`** gained `maskedEmail` and `accessToken`; `MeScreen`'s profile line now shows whichever contact method was actually used.
+- **Gradle**: added `okhttp` dependency, `buildConfig = true`, and `SUPABASE_URL`/`SUPABASE_ANON_KEY` `buildConfigField`s sourced from `local.properties` (gitignored, real values never committed). Added `INTERNET` permission to the manifest (previously absent — the app made zero network calls before this).
+- **Two Supabase-side dashboard fixes needed beyond app code**, both now documented in Current State → Auth: custom SMTP (Resend) was required before Supabase would even allow editing an email template's raw source, and the default "Confirm signup"/"Magic Link" templates had to be edited to include `{{ .Token }}` (they only show a confirmation link by default, not a bare code).
+- **Bug caught during testing, fixed same session**: navigating to `EmailScreen` never told `AuthViewModel` to switch its `AuthMethod` away from the default (`PHONE`), so tapping "Send code" from the email screen silently tried to send an SMS and failed with a real "unsupported phone provider" error. Fixed by setting the method explicitly (`LaunchedEffect`) on entry to both `PhoneScreen` and `EmailScreen`.
+- Verified end-to-end on a physical device with a real email address: send code → received an actual 8-character code by email → verified → reached Home → Me tab shows the correctly masked email. No crashes in logcat.
+- **Not done**: session persistence (access token is in-memory only, lost on process death — consistent with every other piece of app state today, not a new gap), phone OTP (needs an SMS provider added in Supabase, no app changes required when that happens), and the Worker backend from 2026-08-28 still isn't called by the app for incidents/notifications/profile data.
 
 ### 2026-08-28 — Backend scaffolding: Cloudflare Worker + Supabase (not yet wired to the app)
 User explicitly requested moving off local-only storage/auth onto Supabase (database) + a Cloudflare Worker (backend API), overriding the hard constraint that previously forbade this — see CLAUDE.md and Current State → Backend, above, for the exact status.

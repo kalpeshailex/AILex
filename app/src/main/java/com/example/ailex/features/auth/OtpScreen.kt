@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ailex.ui.components.PrimaryButton
 import com.example.ailex.ui.theme.Background
 import com.example.ailex.ui.theme.Blue600
+import com.example.ailex.ui.theme.Danger600
 import com.example.ailex.ui.theme.Ink500
 import com.example.ailex.ui.theme.Ink700
 import com.example.ailex.ui.theme.Ink900
@@ -86,7 +87,7 @@ fun OtpScreen(
         )
         Row(modifier = Modifier.padding(bottom = 28.dp)) {
             Text(
-                text = "Sent to ${state.maskedMobileNumber} · ",
+                text = "Sent to ${state.maskedContact} · ",
                 style = Typography.bodyMedium,
                 color = Ink500
             )
@@ -102,19 +103,19 @@ fun OtpScreen(
         }
 
         Box {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (i in 0 until 6) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (i in 0 until OtpLength) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(60.dp)
+                            .height(56.dp)
                             .background(Background, ShapeField)
                             .border(1.dp, Line300, ShapeField),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = state.otp.getOrNull(i)?.toString().orEmpty(),
-                            style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold),
+                            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                             color = Ink900
                         )
                     }
@@ -153,17 +154,28 @@ fun OtpScreen(
                     color = Blue600,
                     modifier = Modifier.clickable {
                         viewModel.resetOtp()
+                        viewModel.sendCode(onSuccess = {})
                         secondsRemaining = ResendSeconds
                     }
                 )
             }
         }
 
+        if (state.errorMessage != null) {
+            Text(
+                text = state.errorMessage.orEmpty(),
+                style = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
+                color = Danger600,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.weight(1f))
         PrimaryButton(
             text = "Verify",
-            enabled = state.isOtpValid,
-            onClick = onVerified
+            enabled = state.isOtpValid && !state.isVerifying,
+            loading = state.isVerifying,
+            onClick = { viewModel.verifyCode(onSuccess = onVerified) }
         )
     }
 }

@@ -120,8 +120,9 @@ fun MeScreen(
                         style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                         color = Ink900
                     )
+                    val contact = state.maskedMobile.ifBlank { state.maskedEmail }.ifBlank { "Not set" }
                     Text(
-                        text = "${state.maskedMobile.ifBlank { "Number not set" }} · ${state.language.displayName}",
+                        text = "$contact · ${state.language.displayName}",
                         style = TextStyle(fontSize = 13.sp),
                         color = Ink500,
                         modifier = Modifier.padding(top = 2.dp)

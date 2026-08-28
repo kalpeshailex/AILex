@@ -19,6 +19,9 @@ enum class TextSize { STANDARD, LARGE, EXTRA_LARGE }
 data class AppSessionState(
     val displayName: String = "",
     val maskedMobile: String = "",
+    val maskedEmail: String = "",
+    /** The verified Supabase Auth session's access token, or null if signed out. */
+    val accessToken: String? = null,
     val language: AppLanguage = AppLanguage.ENGLISH,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val textSize: TextSize = TextSize.STANDARD,
@@ -44,6 +47,22 @@ class AppViewModel : ViewModel() {
             rawNumber
         }
         _state.value = _state.value.copy(maskedMobile = masked)
+    }
+
+    /** "te••••@example.com" — first 2 chars of the local part, domain untouched. */
+    fun setEmail(email: String) {
+        val at = email.indexOf('@')
+        val masked = if (at > 2) {
+            "${email.take(2)}${"•".repeat((at - 2).coerceAtLeast(2))}${email.substring(at)}"
+        } else {
+            email
+        }
+        _state.value = _state.value.copy(maskedEmail = masked)
+    }
+
+    /** The access token from a just-verified Supabase Auth session (see SupabaseAuthApi). */
+    fun setSession(accessToken: String) {
+        _state.value = _state.value.copy(accessToken = accessToken)
     }
 
     fun setUserProfile(name: String, language: AppLanguage) {

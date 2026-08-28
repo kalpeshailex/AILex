@@ -110,7 +110,12 @@ fun LanguageScreen(
             text = "Finish setup",
             onClick = {
                 appViewModel.setUserProfile(state.name, state.language)
-                appViewModel.setMobileNumber(state.mobileNumber)
+                if (state.method == AuthMethod.EMAIL) {
+                    appViewModel.setEmail(state.email)
+                } else {
+                    appViewModel.setMobileNumber(state.mobileNumber)
+                }
+                state.session?.let { appViewModel.setSession(it.accessToken) }
                 onFinish()
             }
         )

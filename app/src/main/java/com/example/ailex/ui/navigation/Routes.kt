@@ -6,6 +6,7 @@ object Routes {
         const val GRAPH = "auth_graph"
         const val WELCOME = "auth/welcome"
         const val MOBILE = "auth/mobile"
+        const val EMAIL = "auth/email"
         const val OTP = "auth/otp"
         const val NAME = "auth/name"
         const val LANGUAGE = "auth/language"

@@ -63,7 +63,7 @@ fun NameScreen(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Number verified",
+                text = if (state.method == AuthMethod.EMAIL) "Email verified" else "Number verified",
                 style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium),
                 color = Success700
             )

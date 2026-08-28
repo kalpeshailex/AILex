@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ailex.ui.components.AilexCard
 import com.example.ailex.ui.components.AppMark
+import com.example.ailex.ui.components.OutlinedAilexButton
 import com.example.ailex.ui.components.PrimaryButton
 import com.example.ailex.ui.theme.Background
 import com.example.ailex.ui.theme.Ink500
@@ -40,7 +41,10 @@ private val WelcomePoints = listOf(
 )
 
 @Composable
-fun WelcomeScreen(onContinue: () -> Unit) {
+fun WelcomeScreen(
+    onContinueWithPhone: () -> Unit,
+    onContinueWithEmail: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,7 +89,12 @@ fun WelcomeScreen(onContinue: () -> Unit) {
                 }
             }
         }
-        PrimaryButton(text = "Continue with mobile number", onClick = onContinue)
+        PrimaryButton(text = "Continue with mobile number", onClick = onContinueWithPhone)
+        OutlinedAilexButton(
+            text = "Continue with email",
+            onClick = onContinueWithEmail,
+            modifier = Modifier.padding(top = 10.dp)
+        )
         Text(
             text = "We never ask for OTPs, PINs, passwords or CVVs in chat.",
             style = TextStyle(fontSize = 12.sp, lineHeight = 17.sp),

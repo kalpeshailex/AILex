@@ -16,6 +16,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.example.ailex.core.common.LegalDomain
 import com.example.ailex.features.auth.AuthViewModel
+import com.example.ailex.features.auth.EmailScreen
 import com.example.ailex.features.auth.NameScreen
 import com.example.ailex.features.auth.OtpScreen
 import com.example.ailex.features.auth.PhoneScreen
@@ -56,12 +57,24 @@ fun AilexNavHost(
     ) {
         navigation(startDestination = Routes.Auth.WELCOME, route = Routes.Auth.GRAPH) {
             composable(Routes.Auth.WELCOME) {
-                WelcomeScreen(onContinue = { navController.navigate(Routes.Auth.MOBILE) })
+                WelcomeScreen(
+                    onContinueWithPhone = { navController.navigate(Routes.Auth.MOBILE) },
+                    onContinueWithEmail = { navController.navigate(Routes.Auth.EMAIL) }
+                )
             }
             composable(Routes.Auth.MOBILE) { backStackEntry ->
                 val authGraphEntry = remember { navController.getBackStackEntry(Routes.Auth.GRAPH) }
                 val authViewModel: AuthViewModel = viewModel(authGraphEntry)
                 PhoneScreen(
+                    viewModel = authViewModel,
+                    onBack = { navController.popBackStack() },
+                    onContinue = { navController.navigate(Routes.Auth.OTP) }
+                )
+            }
+            composable(Routes.Auth.EMAIL) {
+                val authGraphEntry = remember { navController.getBackStackEntry(Routes.Auth.GRAPH) }
+                val authViewModel: AuthViewModel = viewModel(authGraphEntry)
+                EmailScreen(
                     viewModel = authViewModel,
                     onBack = { navController.popBackStack() },
                     onContinue = { navController.navigate(Routes.Auth.OTP) }
@@ -73,7 +86,7 @@ fun AilexNavHost(
                 OtpScreen(
                     viewModel = authViewModel,
                     onBack = { navController.popBackStack() },
-                    onChangeNumber = { navController.popBackStack(Routes.Auth.MOBILE, false) },
+                    onChangeNumber = { navController.popBackStack() },
                     onVerified = { navController.navigate(Routes.Auth.NAME) }
                 )
             }
