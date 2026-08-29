@@ -6,8 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -39,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ailex.core.common.IncidentStatus
 import com.example.ailex.core.common.LegalDomain
-import com.example.ailex.domain.conversation.UpiFraudDemoTurn
+import com.example.ailex.core.network.ConversationTurn
 import com.example.ailex.domain.incident.Incident
 import com.example.ailex.features.incidents.LocalIncidentsViewModel
 import com.example.ailex.ui.components.LocalToastHostState
@@ -86,19 +86,27 @@ import com.example.ailex.ui.theme.ShapeCard
 import com.example.ailex.ui.theme.ShapePill
 import com.example.ailex.ui.theme.Surface
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.UUID
 
 @Composable
 fun ConversationScreen(
     sessionViewModel: AskLegalAiSessionViewModel,
     onBack: () -> Unit,
-    onEscalation: () -> Unit,
+    onEscalation: (LegalDomain?) -> Unit,
     onStartVoice: () -> Unit
 ) {
     val session by sessionViewModel.session.collectAsStateWithLifecycle()
     var input by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(session.messages.size) {
+        if (session.messages.isNotEmpty()) {
+            // Item indices: 0 = leading spacer, 1..size = messages, size+1 = trailing
+            // spacer -- scrolling to the trailing spacer brings the true bottom of the
+            // newest message into view, not just its top (answer cards can be tall).
+            listState.animateScrollToItem(session.messages.size + 1)
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().background(Surface)) {
         Row(
@@ -123,6 +131,7 @@ fun ConversationScreen(
         Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Line200))
 
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -133,7 +142,8 @@ fun ConversationScreen(
             items(session.messages, key = { it.id }) { message ->
                 when {
                     message.isUser -> UserBubble(text = message.text)
-                    message.isRichDemo -> RichDemoTurn(onEscalation = onEscalation)
+                    message.isPending -> PendingBubble()
+                    message.answer != null -> AnswerCard(turn = message.answer, onEscalation = onEscalation)
                     else -> AssistantBubble(text = message.text)
                 }
             }
@@ -185,9 +195,62 @@ private fun AssistantBubble(text: String) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RichDemoTurn(onEscalation: () -> Unit) {
+private fun PendingBubble() {
+    AssistantBubble(text = "Thinking…")
+}
+
+@Composable
+private fun UrgencyBanner(turn: ConversationTurn) {
+    if (turn.riskLevel != "HIGH" && turn.riskLevel != "CRITICAL") return
+    val kicker = if (turn.riskLevel == "CRITICAL") "Act now" else "Important safety note"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Danger100, ShapeCard)
+            .border(1.dp, DangerBorder, ShapeCard)
+            .padding(13.dp),
+        horizontalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Icon(Icons.Filled.Bolt, contentDescription = null, tint = Danger600, modifier = Modifier.size(19.dp))
+        Column {
+            Text(
+                text = kicker.uppercase(),
+                style = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.06.em),
+                color = Danger600,
+                modifier = Modifier.padding(bottom = 5.dp)
+            )
+            Text(
+                text = turn.riskReason.ifBlank { "This situation may need urgent attention." },
+                style = TextStyle(fontSize = 13.5.sp, lineHeight = 20.sp),
+                color = Danger700
+            )
+        }
+    }
+}
+
+@Composable
+private fun LabeledBulletGroup(label: String, items: List<String>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(bottom = 12.dp)) {
+        Text(text = label, style = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight.Bold), color = Ink900, modifier = Modifier.padding(bottom = 6.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            items.forEach { item ->
+                Text(text = "•  $item", style = TextStyle(fontSize = 13.5.sp, lineHeight = 20.sp), color = Ink700)
+            }
+        }
+    }
+}
+
+/**
+ * Renders one real AI-pipeline answer (`ConversationTurn`, from
+ * `POST /conversation/message`). Replaces the old hand-scripted UPI-fraud
+ * demo turn — every field here is whatever the backend actually returned,
+ * including an honest "I don't have enough verified information" summary
+ * with empty rights/obligations/citations when there's no verified legal
+ * evidence yet (see backend/src/legal/LegalKnowledgeService.ts).
+ */
+@Composable
+private fun AnswerCard(turn: ConversationTurn, onEscalation: (LegalDomain?) -> Unit) {
     val incidentsViewModel = LocalIncidentsViewModel.current
     val toastHost = LocalToastHostState.current
     val scope = rememberCoroutineScope()
@@ -198,30 +261,7 @@ private fun RichDemoTurn(onEscalation: () -> Unit) {
         modifier = Modifier.fillMaxWidth(fraction = 0.92f),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Urgency banner
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Danger100, ShapeCard)
-                .border(1.dp, DangerBorder, ShapeCard)
-                .padding(13.dp),
-            horizontalArrangement = Arrangement.spacedBy(9.dp)
-        ) {
-            Icon(Icons.Filled.Bolt, contentDescription = null, tint = Danger600, modifier = Modifier.size(19.dp))
-            Column {
-                Text(
-                    text = UpiFraudDemoTurn.UrgencyKicker.uppercase(),
-                    style = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.06.em),
-                    color = Danger600,
-                    modifier = Modifier.padding(bottom = 5.dp)
-                )
-                Text(
-                    text = UpiFraudDemoTurn.UrgencyBody,
-                    style = TextStyle(fontSize = 13.5.sp, lineHeight = 20.sp),
-                    color = Danger700
-                )
-            }
-        }
+        UrgencyBanner(turn)
 
         // Answer card
         Column(
@@ -232,84 +272,108 @@ private fun RichDemoTurn(onEscalation: () -> Unit) {
                 .padding(15.dp)
         ) {
             Text(
-                text = UpiFraudDemoTurn.AnswerIntro,
-                style = TextStyle(fontSize = 14.5.sp, lineHeight = 22.sp),
-                color = Ink700,
-                modifier = Modifier.padding(bottom = 14.dp)
+                text = turn.summary,
+                style = TextStyle(fontSize = 14.5.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold),
+                color = Ink900,
+                modifier = Modifier.padding(bottom = 6.dp)
             )
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 14.dp)) {
-                UpiFraudDemoTurn.Steps.forEachIndexed { index, step ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(23.dp)
-                                .background(Blue100, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "${index + 1}", style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold), color = Navy700)
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = step.text, style = TextStyle(fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium), color = Ink900)
+            if (turn.situation.isNotBlank() && turn.situation != turn.summary) {
+                Text(
+                    text = turn.situation,
+                    style = TextStyle(fontSize = 13.5.sp, lineHeight = 20.sp),
+                    color = Ink600,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            if (turn.actions.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 14.dp)) {
+                    turn.actions.forEachIndexed { index, action ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                            Box(
+                                modifier = Modifier.size(23.dp).background(Blue100, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "${index + 1}", style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold), color = Navy700)
+                            }
                             Text(
-                                text = step.note,
-                                style = TextStyle(fontSize = 12.5.sp, lineHeight = 18.sp),
-                                color = Ink500,
-                                modifier = Modifier.padding(top = 3.dp)
+                                text = action.step,
+                                style = TextStyle(fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium),
+                                color = Ink900,
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
             }
-            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Line200))
-            Column(modifier = Modifier.padding(top = 13.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Filled.Block, contentDescription = null, tint = Danger600, modifier = Modifier.size(16.dp))
-                    Text(text = UpiFraudDemoTurn.WarningNoShare, style = TextStyle(fontSize = 13.sp, lineHeight = 19.sp), color = Ink600)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Filled.Inventory2, contentDescription = null, tint = Preserve700, modifier = Modifier.size(16.dp))
-                    Text(text = UpiFraudDemoTurn.WarningPreserve, style = TextStyle(fontSize = 13.sp, lineHeight = 19.sp), color = Ink600)
+
+            if (turn.rights.isNotEmpty()) LabeledBulletGroup("Your rights", turn.rights)
+            if (turn.obligations.isNotEmpty()) LabeledBulletGroup("Your position", turn.obligations)
+            if (turn.authorityPowers.isNotEmpty()) LabeledBulletGroup("Authority powers", turn.authorityPowers)
+
+            if (turn.avoid.isNotEmpty() || turn.preserve.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Line200))
+                Column(modifier = Modifier.padding(top = 13.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    turn.avoid.forEach { item ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Filled.Block, contentDescription = null, tint = Danger600, modifier = Modifier.size(16.dp))
+                            Text(text = item, style = TextStyle(fontSize = 13.sp, lineHeight = 19.sp), color = Ink600)
+                        }
+                    }
+                    turn.preserve.forEach { item ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Filled.Inventory2, contentDescription = null, tint = Preserve700, modifier = Modifier.size(16.dp))
+                            Text(text = item, style = TextStyle(fontSize = 13.sp, lineHeight = 19.sp), color = Ink600)
+                        }
+                    }
                 }
             }
         }
 
-        // Legal basis accordion
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Surface, ShapeCard)
-                .border(1.dp, Line200, ShapeCard)
-        ) {
-            Row(
+        // Legal basis accordion — only when the pipeline actually found verified evidence.
+        if (turn.citations.isNotEmpty()) {
+            Column(
                 modifier = Modifier
-                    .clickable { legalOpen = !legalOpen }
-                    .padding(13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    .fillMaxWidth()
+                    .background(Surface, ShapeCard)
+                    .border(1.dp, Line200, ShapeCard)
             ) {
-                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = Navy900, modifier = Modifier.size(19.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Legal basis", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold), color = Ink900)
-                    Text(text = "2 verified sources", style = TextStyle(fontSize = 12.sp), color = Ink500, modifier = Modifier.padding(top = 2.dp))
-                }
-                Icon(
-                    imageVector = if (legalOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null,
-                    tint = Ink500
-                )
-            }
-            if (legalOpen) {
-                Column(
-                    modifier = Modifier.padding(start = 13.dp, end = 13.dp, bottom = 13.dp),
-                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                Row(
+                    modifier = Modifier
+                        .clickable { legalOpen = !legalOpen }
+                        .padding(13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    UpiFraudDemoTurn.Sources.forEach { source ->
-                        SourceCard(
-                            title = source.title,
-                            excerpt = source.excerpt,
-                            authority = source.authority,
-                            lastVerified = source.lastVerified.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH))
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = Navy900, modifier = Modifier.size(19.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Legal basis", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold), color = Ink900)
+                        Text(
+                            text = "${turn.citations.size} verified source${if (turn.citations.size == 1) "" else "s"}",
+                            style = TextStyle(fontSize = 12.sp),
+                            color = Ink500,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
+                    }
+                    Icon(
+                        imageVector = if (legalOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription = null,
+                        tint = Ink500
+                    )
+                }
+                if (legalOpen) {
+                    Column(
+                        modifier = Modifier.padding(start = 13.dp, end = 13.dp, bottom = 13.dp),
+                        verticalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
+                        turn.citations.forEach { citation ->
+                            SourceCard(
+                                title = citation.title,
+                                excerpt = citation.sectionReference ?: citation.officialUrl ?: "See official source for full text.",
+                                authority = citation.jurisdiction,
+                                lastVerified = citation.effectiveDate ?: "Not specified"
+                            )
+                        }
                     }
                 }
             }
@@ -327,16 +391,23 @@ private fun RichDemoTurn(onEscalation: () -> Unit) {
                     incidentsViewModel.addIncident(
                         Incident(
                             id = UUID.randomUUID().toString(),
-                            domain = LegalDomain.CYBER,
-                            title = UpiFraudDemoTurn.Topic,
+                            domain = turn.legalDomain ?: LegalDomain.POLICE,
+                            title = turn.displayTitle,
                             status = IncidentStatus.ACTIVE,
-                            summary = UpiFraudDemoTurn.AnswerIntro
+                            summary = turn.summary
                         )
                     )
                     scope.launch { toastHost.showToast("Situation saved") }
                 }
             )
-            ActionChip(icon = Icons.AutoMirrored.Filled.AltRoute, label = "Escalation", fill = Surface, border = Line200, ink = Ink700, onClick = onEscalation)
+            ActionChip(
+                icon = Icons.AutoMirrored.Filled.AltRoute,
+                label = "Escalation",
+                fill = Surface,
+                border = Line200,
+                ink = Ink700,
+                onClick = { onEscalation(turn.legalDomain) }
+            )
             IconOnlyChip(
                 icon = if (speaking) Icons.Filled.StopCircle else Icons.AutoMirrored.Filled.VolumeUp,
                 contentDescription = if (speaking) "Stop" else "Play",
@@ -344,35 +415,20 @@ private fun RichDemoTurn(onEscalation: () -> Unit) {
             )
         }
 
-        // Follow-up card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Surface, ShapeCard)
-                .border(1.dp, Line200, ShapeCard)
-                .padding(15.dp)
-        ) {
-            Text(
-                text = UpiFraudDemoTurn.FollowUpQuestion,
-                style = TextStyle(fontSize = 14.5.sp, lineHeight = 22.sp),
-                color = Ink700,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                UpiFraudDemoTurn.FollowUpChips.forEach { chip ->
-                    Text(
-                        text = chip,
-                        style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium),
-                        color = Ink700,
-                        modifier = Modifier
-                            .background(Background, ShapePill)
-                            .border(1.dp, Line300, ShapePill)
-                            .clickable {
-                                scope.launch { toastHost.showToast("Follow-up recorded. Next fact only if it changes the answer.") }
-                            }
-                            .padding(horizontal = 13.dp, vertical = 9.dp)
-                    )
-                }
+        // Follow-up
+        if (turn.needsFollowUp && !turn.nextQuestion.isNullOrBlank()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Surface, ShapeCard)
+                    .border(1.dp, Line200, ShapeCard)
+                    .padding(15.dp)
+            ) {
+                Text(
+                    text = turn.nextQuestion,
+                    style = TextStyle(fontSize = 14.5.sp, lineHeight = 22.sp),
+                    color = Ink700
+                )
             }
         }
     }

@@ -274,7 +274,7 @@ fun AilexNavHost(
                 ConversationScreen(
                     sessionViewModel = sessionViewModel,
                     onBack = { navController.popBackStack() },
-                    onEscalation = { navController.navigate(Routes.Escalation.route(LegalDomain.CYBER.id)) },
+                    onEscalation = { domain -> navController.navigate(Routes.Escalation.route((domain ?: LegalDomain.CYBER).id)) },
                     onStartVoice = { navController.navigate(Routes.Ask.VOICE) }
                 )
             }
