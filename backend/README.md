@@ -63,6 +63,30 @@ Supabase dashboard → **SQL Editor → New query** → paste the contents of
 `profiles`, and `notifications` tables with Row Level Security policies
 scoped to `auth.uid()`.
 
+### 4a. Run the legal knowledge base schema + seed
+
+Same SQL Editor, two more scripts, **in order**:
+
+1. [`legal_kb_schema.sql`](legal_kb_schema.sql) — creates 9 reference tables
+   (`legal_sources`, `law_sections`, `penalties`, `scenarios`,
+   `scenario_questions`, `authorities`, `authority_contacts`,
+   `escalation_paths`, `document_chunks`), each with RLS allowing any
+   authenticated user to `SELECT` and nobody to mutate via the app.
+2. [`legal_kb_seed.sql`](legal_kb_seed.sql) — ~294 `INSERT ... ON CONFLICT DO
+   NOTHING` statements generated from a user-provided research spreadsheet
+   (`Mumbai_Legal_KB_All_Domains_Populated.xlsx`, 2026-08-27 pass covering
+   all 5 V1 domains). Safe to re-run. Several rows are `pending_review`, not
+   `verified` — see that spreadsheet's own `_README` sheet for exactly which
+   ones still need a human to open the official URL and confirm before this
+   goes anywhere near a real launch; `CitationValidator` treats the two
+   statuses differently (qualified vs. fully trusted) but both are usable
+   for a working preview.
+
+This is what `POST /conversation/message` (see "AI pipeline" below) actually
+retrieves from — without it, `LegalKnowledgeService`/`AuthorityService`
+query real tables that simply don't exist yet, and every answer falls back
+to the generic "insufficient verified information" response.
+
 ### 5. Enable phone/OTP auth
 
 Supabase dashboard → **Authentication → Providers → Phone** → enable it,
@@ -102,11 +126,12 @@ dev`, and as a Worker secret for deploy (step 8). `AI_PROVIDER`,
 already set in `wrangler.toml`'s `[vars]` — override them there if you need
 a different model.
 
-There is no real legal knowledge base or pgvector retrieval wired up yet
-(see `06_AI_ARCHITECTURE.md`/`07_RAG.md` and `src/legal/LegalKnowledgeService.ts`)
-— until that exists, this endpoint will mostly return the honest "I don't
-have enough verified information to answer this reliably" fallback, which
-is expected, not a bug.
+There's a real (if still `pending_review`-heavy) legal knowledge base behind
+this now — see step 4a above. It's a plain domain+jurisdiction SQL filter
+plus a keyword relevance pass, not pgvector/embeddings yet (see
+`06_AI_ARCHITECTURE.md`/`07_RAG.md`). A domain/scenario the corpus doesn't
+cover still legitimately falls back to the honest "I don't have enough
+verified information to answer this reliably" — expected, not a bug.
 
 ### 8. Deploy
 
@@ -150,11 +175,15 @@ for the implementation: Input Normalizer → Situation Classifier → Context
 Extractor → Risk Engine → Legal Knowledge Service → Authority Service →
 Action Planner → Response Generator → Citation Validator → Safety Validator.
 
-Two pieces are still mock/interface-only, on purpose, since there is no real
-legal corpus yet: `src/legal/LegalKnowledgeService.ts` and
-`src/authority/AuthorityService.ts`. Both ship a `Mock*` implementation that
-returns nothing by default — real legal claims can only ever come from a
-real implementation of these interfaces, never from the LLM's own memory.
+`LegalKnowledgeService`/`AuthorityService` are interfaces (`src/legal/`,
+`src/authority/`) with two implementations each: a `Mock*` that returns
+nothing (still used by tests — see `test/`) and the real
+`Supabase*` ones the route actually uses, querying the tables from step 4a
+through the caller's own request-scoped Supabase client. Either way, real
+legal claims can only ever come from a real implementation of these
+interfaces, never from the LLM's own memory — see `CitationValidator`/
+`SafetyValidator` for how that's enforced even if a prompt change tried to
+bypass it.
 
 Gemini is the only implemented `AIProvider` (`src/ai/GeminiAIProvider.ts`),
 but nothing outside `src/ai/` depends on Gemini directly — swapping
@@ -163,13 +192,13 @@ touching classification/context/planning/response-generation logic.
 
 ## What's not done yet
 
-- **Incidents/profile/notifications are wired up**; the Android app calls
-  this Worker for those. Ask Legal AI is not wired up on the Android side
-  yet — the app's conversation screen still shows a fixed placeholder reply
-  (see `BUILD_LOG.md`). Calling `/conversation/message` from the app is a
-  separate follow-up.
-- There is no real legal corpus, pgvector retrieval, or authority/contact
-  data source yet — see "AI pipeline" above.
+- **Incidents/profile/notifications/Ask Legal AI are all wired up** on the
+  Android side — see `BUILD_LOG.md`.
+- The legal knowledge base (step 4a) covers all 5 domains but is a first
+  research pass, not a launch-ready corpus — many rows are `pending_review`,
+  not `verified` (see the spreadsheet's own `_README` sheet), and there's no
+  pgvector/embeddings retrieval yet, just domain+jurisdiction+keyword
+  filtering.
 - There is no `conversations`/`messages` persistence table — `/conversation/message`
   is stateless per call; the caller round-trips `previous_context`/
   `previous_domain`/`previous_scenario` from the previous response to avoid

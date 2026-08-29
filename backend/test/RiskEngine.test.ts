@@ -32,6 +32,16 @@ describe("RiskEngine", () => {
     expect(result.escalation_recommended).toBe(true);
   });
 
+  it("treats natural spoken phrasing of the same fraud as HIGH risk, not just clinical wording", () => {
+    // Found live via the app's voice-input flow -- VoiceDemo's transcript
+    // didn't match any HIGH pattern until this phrasing was added.
+    const result = assessRisk(
+      "Someone called saying they were from my bank and forty thousand rupees has gone out of my account through UPI.",
+      null
+    );
+    expect(result.level).toBe("HIGH");
+  });
+
   it("treats a compromised OTP as HIGH risk", () => {
     const result = assessRisk("Someone has my OTP.", null);
     expect(result.level).toBe("HIGH");

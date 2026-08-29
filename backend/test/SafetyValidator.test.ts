@@ -59,6 +59,16 @@ describe("SafetyValidator", () => {
     expect(result.flags).toContain("OBSTRUCTION_ADVICE");
   });
 
+  it("does not flag 'block the card/UPI' as obstruction advice", () => {
+    // Found live: a real UPI-fraud answer recommending "block the card and
+    // UPI access" was wrongly withheld -- the old pattern treated a bare
+    // "the" as satisfying "block (the|police)", not just "block the police".
+    const result = validateSafety(
+      baseResponse({ actions: [{ step: "Block the card and freeze UPI access through your bank immediately.", grounded_in: [] }] })
+    );
+    expect(result.passed).toBe(true);
+  });
+
   it("blocks covert surveillance instructions", () => {
     const result = validateSafety(baseResponse({ actions: [{ step: "You could secretly record the officer.", grounded_in: [] }] }));
     expect(result.passed).toBe(false);

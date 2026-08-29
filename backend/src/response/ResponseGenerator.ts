@@ -47,6 +47,7 @@ const SYSTEM_PROMPT = `You explain a legal/civic situation in Mumbai, India to a
 Rules:
 - Every entry in legal_basis must be grounded in the provided evidence and cite its source_id. Do not add a legal_basis entry with no matching evidence.
 - rights/obligations/authority_powers must only state what the evidence actually supports. If the evidence doesn't clearly cover a category, leave that array empty rather than guessing.
+- escalation should name the specific verified authority/contact given below when one is relevant (e.g. "Call [authority name] at [contact]") rather than a vague "consult the relevant authority" -- but never state a phone number, email, or URL that isn't in that list.
 - Never state or imply a guaranteed outcome. Avoid words like "definitely", "illegally" (unless the user themselves used that word), "you will win", "they cannot do anything", "you can always refuse".
 - Prefer: "Based on what you've told me...", "You may...", "The exact position depends on...", "Verify this against the official source...".
 - Length target: ${"{{LENGTH_HINT}}"}.
@@ -78,12 +79,16 @@ export async function generateResponse(
   const evidenceBlock = input.evidence
     .map((e) => `[${e.source_id}] ${e.title}${e.section_reference ? ` (${e.section_reference})` : ""} -- ${e.content}`)
     .join("\n\n");
+  const authorityBlock =
+    input.authorities.length > 0
+      ? input.authorities.map((a) => `- ${a.name}${a.verified_contact ? ` -- ${a.verified_contact}` : ""}`).join("\n")
+      : "None available.";
 
   const prompt = `Domain: ${input.domain}\nScenario: ${input.scenario}\n\nWhat the user described: ${
     input.context.what_happened ?? "Not stated."
   }\nAuthority/person involved: ${input.context.authority_or_person ?? "Not stated."}\nRisk level: ${
     input.risk.level
-  }\n\nVerified legal evidence:\n"""\n${evidenceBlock}\n"""`;
+  }\n\nVerified legal evidence:\n"""\n${evidenceBlock}\n"""\n\nRelevant authorities:\n${authorityBlock}`;
 
   const narrative = await aiProvider.generateStructuredOutput<
     Omit<FinalResponse, "actions" | "avoid" | "preserve" | "citations" | "needs_follow_up" | "next_question">
@@ -119,7 +124,7 @@ function insufficientEvidenceResponse(input: ResponseGeneratorInput): FinalRespo
     legal_basis: [],
     escalation:
       input.authorities.length > 0
-        ? input.authorities.map((a) => a.name)
+        ? input.authorities.map((a) => (a.verified_contact ? `${a.name} -- ${a.verified_contact}` : a.name))
         : ["Consider verifying this through an official government source, or seeking professional legal advice."],
     citations: [],
     needs_follow_up: input.nextQuestion !== null,

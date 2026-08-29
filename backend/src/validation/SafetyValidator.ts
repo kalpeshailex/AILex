@@ -37,11 +37,19 @@ const RULES: SafetyRule[] = [
   },
   {
     flag: "CONFRONTATION_ADVICE",
-    patterns: [/\brefuse to (comply|cooperate)\b/i, /\bconfront (the|him|her|them)\b/i, /\bargue with (the )?(officer|police)\b/i],
+    patterns: [
+      /\brefuse to (comply|cooperate)\b/i,
+      /\bconfront (the )?(officer|police|him|her|them)\b/i,
+      /\bargue with (the )?(officer|police)\b/i,
+    ],
   },
   {
     flag: "OBSTRUCTION_ADVICE",
-    patterns: [/\bblock (the|police)\b/i, /\bprevent (the )?(officer|police) from (doing their job|arresting)\b/i],
+    // "block the card/UPI/SIM" is common, safe fraud-mitigation advice --
+    // require an actual person/authority object, not a bare "the" (found
+    // live: "block the card and UPI access" was a false positive here
+    // because "the" alone satisfied the old `(the|police)` alternation).
+    patterns: [/\bblock (the )?(officer|police)\b/i, /\bprevent (the )?(officer|police) from (doing their job|arresting)\b/i],
   },
   {
     flag: "SURVEILLANCE_INSTRUCTIONS",

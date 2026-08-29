@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Inventory2
@@ -65,6 +66,7 @@ import com.example.ailex.ui.components.LocalToastHostState
 import com.example.ailex.ui.components.SourceCard
 import com.example.ailex.ui.components.showToast
 import com.example.ailex.ui.theme.Background
+import com.example.ailex.ui.theme.Blue050
 import com.example.ailex.ui.theme.Blue100
 import com.example.ailex.ui.theme.Blue600
 import com.example.ailex.ui.theme.BlueBorder
@@ -83,6 +85,7 @@ import com.example.ailex.ui.theme.Navy900
 import com.example.ailex.ui.theme.Preserve100
 import com.example.ailex.ui.theme.Preserve700
 import com.example.ailex.ui.theme.ShapeCard
+import com.example.ailex.ui.theme.ShapeCardSm
 import com.example.ailex.ui.theme.ShapePill
 import com.example.ailex.ui.theme.Surface
 import kotlinx.coroutines.launch
@@ -286,6 +289,37 @@ private fun AnswerCard(turn: ConversationTurn, onEscalation: (LegalDomain?) -> U
                 )
             }
 
+            // The single most important next step when the AI still needs
+            // something from you -- shown right up front, before generic
+            // actions or any save/escalate options, so it reads as "answer
+            // this next" rather than an afterthought tacked onto the end.
+            if (turn.needsFollowUp && !turn.nextQuestion.isNullOrBlank()) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 14.dp)
+                        .fillMaxWidth()
+                        .background(Blue050, ShapeCardSm)
+                        .border(1.dp, BlueBorder, ShapeCardSm)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = Blue600, modifier = Modifier.size(18.dp))
+                    Column {
+                        Text(
+                            text = "ONE MORE THING",
+                            style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.06.em),
+                            color = Blue600,
+                            modifier = Modifier.padding(bottom = 3.dp)
+                        )
+                        Text(
+                            text = turn.nextQuestion,
+                            style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
+                            color = Ink900
+                        )
+                    }
+                }
+            }
+
             if (turn.actions.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 14.dp)) {
                     turn.actions.forEachIndexed { index, action ->
@@ -379,55 +413,50 @@ private fun AnswerCard(turn: ConversationTurn, onEscalation: (LegalDomain?) -> U
             }
         }
 
-        // Action chips
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ActionChip(
-                icon = Icons.Filled.BookmarkAdd,
-                label = "Save this situation",
-                fill = Blue100,
-                border = BlueBorder,
-                ink = Navy700,
-                onClick = {
-                    incidentsViewModel.addIncident(
-                        Incident(
-                            id = UUID.randomUUID().toString(),
-                            domain = turn.legalDomain ?: LegalDomain.POLICE,
-                            title = turn.displayTitle,
-                            status = IncidentStatus.ACTIVE,
-                            summary = turn.summary
-                        )
-                    )
-                    scope.launch { toastHost.showToast("Situation saved") }
-                }
-            )
-            ActionChip(
-                icon = Icons.AutoMirrored.Filled.AltRoute,
-                label = "Escalation",
-                fill = Surface,
-                border = Line200,
-                ink = Ink700,
-                onClick = { onEscalation(turn.legalDomain) }
-            )
-            IconOnlyChip(
-                icon = if (speaking) Icons.Filled.StopCircle else Icons.AutoMirrored.Filled.VolumeUp,
-                contentDescription = if (speaking) "Stop" else "Play",
-                onClick = { speaking = !speaking }
-            )
-        }
+        // Action chips — only once there's something real to save/escalate.
+        // A bare clarification turn (no actions/rights/obligations/authority
+        // powers/citations yet) has nothing worth these options; showing them
+        // anyway reads as "the conversation is done" right when the AI is
+        // still waiting on you to answer the question above.
+        val hasSubstantiveContent = turn.actions.isNotEmpty() ||
+            turn.rights.isNotEmpty() ||
+            turn.obligations.isNotEmpty() ||
+            turn.authorityPowers.isNotEmpty() ||
+            turn.citations.isNotEmpty()
 
-        // Follow-up
-        if (turn.needsFollowUp && !turn.nextQuestion.isNullOrBlank()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Surface, ShapeCard)
-                    .border(1.dp, Line200, ShapeCard)
-                    .padding(15.dp)
-            ) {
-                Text(
-                    text = turn.nextQuestion,
-                    style = TextStyle(fontSize = 14.5.sp, lineHeight = 22.sp),
-                    color = Ink700
+        if (hasSubstantiveContent) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ActionChip(
+                    icon = Icons.Filled.BookmarkAdd,
+                    label = "Save this situation",
+                    fill = Blue100,
+                    border = BlueBorder,
+                    ink = Navy700,
+                    onClick = {
+                        incidentsViewModel.addIncident(
+                            Incident(
+                                id = UUID.randomUUID().toString(),
+                                domain = turn.legalDomain ?: LegalDomain.POLICE,
+                                title = turn.displayTitle,
+                                status = IncidentStatus.ACTIVE,
+                                summary = turn.summary
+                            )
+                        )
+                        scope.launch { toastHost.showToast("Situation saved") }
+                    }
+                )
+                ActionChip(
+                    icon = Icons.AutoMirrored.Filled.AltRoute,
+                    label = "Escalation",
+                    fill = Surface,
+                    border = Line200,
+                    ink = Ink700,
+                    onClick = { onEscalation(turn.legalDomain) }
+                )
+                IconOnlyChip(
+                    icon = if (speaking) Icons.Filled.StopCircle else Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = if (speaking) "Stop" else "Play",
+                    onClick = { speaking = !speaking }
                 )
             }
         }

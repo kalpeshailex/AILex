@@ -4,19 +4,21 @@
 // than introducing a new /api/v1 prefix unilaterally -- see the AI-task
 // final report's "API contract" note for the conflict this resolves.
 //
-// LegalKnowledgeService/AuthorityService are still mock implementations
-// (see src/legal, src/authority) -- there is no real legal corpus or
-// pgvector retrieval wired up yet, so most real conversations will
-// currently get the honest "insufficient verified information" fallback.
-// That is expected, not a bug.
+// LegalKnowledgeService/AuthorityService are backed by the real knowledge
+// base seeded from Mumbai_Legal_KB_All_Domains_Populated.xlsx (see
+// backend/legal_kb_schema.sql / legal_kb_seed.sql) via the caller's own
+// request-scoped Supabase client -- same RLS-as-the-user pattern as every
+// other route. A domain/scenario the corpus doesn't cover yet still
+// legitimately falls through to the honest "insufficient verified
+// information" response -- that's expected, not a bug.
 import { Hono } from "hono";
 import { Env } from "../lib/supabase";
 import { AppVariables, requireUser } from "../middleware/auth";
 import { getAIConfig } from "../config/env";
 import { GeminiAIProvider } from "../ai/GeminiAIProvider";
 import { AIOrchestrator } from "../orchestrator/AIOrchestrator";
-import { MockLegalKnowledgeService } from "../legal/LegalKnowledgeService";
-import { MockAuthorityService } from "../authority/AuthorityService";
+import { SupabaseLegalKnowledgeService } from "../legal/SupabaseLegalKnowledgeService";
+import { SupabaseAuthorityService } from "../authority/SupabaseAuthorityService";
 import { AppError, toAppError } from "../errors/AppError";
 import { ConversationMessageRequest } from "../schemas/types";
 import { logStage } from "../logging/logger";
@@ -45,12 +47,11 @@ conversation.post("/message", async (c) => {
 
   try {
     const aiConfig = getAIConfig(c.env);
+    const supabase = c.get("supabase");
     const orchestrator = new AIOrchestrator({
       aiProvider: new GeminiAIProvider(aiConfig.geminiApiKey, aiConfig.geminiModel),
-      // No real legal/authority data source yet (see module comments) --
-      // this deliberately ships with zero canned "legal" content.
-      legalKnowledgeService: new MockLegalKnowledgeService([]),
-      authorityService: new MockAuthorityService([]),
+      legalKnowledgeService: new SupabaseLegalKnowledgeService(supabase),
+      authorityService: new SupabaseAuthorityService(supabase),
     });
 
     const result = await orchestrator.processConversation(body, requestId);

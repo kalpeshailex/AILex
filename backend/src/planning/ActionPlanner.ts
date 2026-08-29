@@ -33,6 +33,8 @@ const SYSTEM_PROMPT = `You produce a practical action plan for a citizen's legal
 Rules:
 - Every step that makes a legal claim (what someone can/must/cannot do) must cite the source_id(s) it is grounded in, in grounded_in. Steps that are purely procedural/safety advice (e.g. "note the time and location") may have an empty grounded_in array.
 - Do NOT state a legal claim that is not supported by the provided evidence. If the evidence doesn't cover something, omit that claim rather than guessing.
+- The "Relevant authorities" list below is verified contact information (phone numbers, portals) a human has checked -- when a step involves contacting one of them, use the exact contact given rather than a vague "contact the relevant authority." Never state a phone number, email, or URL that is not in that list.
+- Be specific to what the user actually described (amounts, timing, who was involved) rather than a generic checklist -- reference the details you were given.
 - Use cautious language: "Based on what you've told me...", "You may...", "The exact position depends on...", "Verify this against the official source...". Never use "You will win", "They definitely broke the law", "You can always refuse", "This guarantees...", "The officer has no power...".
 - Never guarantee an outcome.
 - Incorporate the given prohibited actions into "avoid" verbatim in spirit.
@@ -61,7 +63,9 @@ export async function planActions(aiProvider: AIProvider, input: ActionPlannerIn
 
   const authorityBlock =
     input.authorities.length > 0
-      ? input.authorities.map((a) => `- ${a.name}${a.official_url ? ` (${a.official_url})` : ""}`).join("\n")
+      ? input.authorities
+          .map((a) => `- ${a.name}${a.verified_contact ? ` -- ${a.verified_contact}` : ""}`)
+          .join("\n")
       : "None available.";
 
   const prompt = `Domain: ${input.domain}\nScenario: ${input.scenario}\nUser objective: ${

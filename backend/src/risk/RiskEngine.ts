@@ -68,6 +68,12 @@ const RULES: RiskRule[] = [
       /\bfraud\b.*\b(upi|bank|card)\b/i,
       /\b(debited|deducted|transferred|stolen|took|taken)\b.*\b(money|amount|from my (account|upi|bank|card))\b/i,
       /\bmoney\b.*\b(was )?(debited|deducted|transferred|stolen|taken)\b/i,
+      // Natural spoken/typed phrasing for money loss doesn't always use a
+      // clinical verb like "debited" -- caught live via voice input testing
+      // ("...forty thousand rupees has gone out of my account through UPI"
+      // matched none of the patterns above).
+      /\b(money|amount|rupees|rs\.?|₹)\b.*\b(gone out|went out|withdrawn|missing)\b/i,
+      /\b(gone out|went out|withdrawn)\b.*\b(account|upi|bank)\b/i,
       /\bunauthoriz(ed|ation) transaction/i,
       /\botp\b.*\b(shared|gave|leaked|used)\b/i,
       /\bsomeone (has|got|took|knows)\s+my\s+(otp|pin|password|cvv|upi pin)\b/i,
