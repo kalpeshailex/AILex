@@ -71,6 +71,36 @@ object SupabaseAuthApi {
     suspend fun verifyPhoneOtp(e164Phone: String, token: String): Result<SupabaseSession> =
         verify(JSONObject().put("type", "sms").put("phone", e164Phone).put("token", token))
 
+    /** Exchanges a stored refresh token for a fresh session — used on app start (see AppViewModel.restoreSession). */
+    suspend fun refreshSession(refreshToken: String): Result<SupabaseSession> = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder()
+                .url("${BuildConfig.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token")
+                .header("apikey", BuildConfig.SUPABASE_ANON_KEY)
+                .header("Content-Type", "application/json")
+                .post(JSONObject().put("refresh_token", refreshToken).toString().toRequestBody(jsonMediaType))
+                .build()
+            client.newCall(request).execute().use { response ->
+                val text = response.body?.string()
+                if (response.isSuccessful && text != null) {
+                    val json = JSONObject(text)
+                    val user = json.getJSONObject("user")
+                    Result.success(
+                        SupabaseSession(
+                            accessToken = json.getString("access_token"),
+                            refreshToken = json.getString("refresh_token"),
+                            userId = user.getString("id")
+                        )
+                    )
+                } else {
+                    Result.failure(SupabaseAuthException(errorMessage(text)))
+                }
+            }
+        } catch (e: IOException) {
+            Result.failure(SupabaseAuthException("Couldn't reach the server. Check your connection and try again."))
+        }
+    }
+
     private suspend fun verify(body: JSONObject): Result<SupabaseSession> = withContext(Dispatchers.IO) {
         try {
             client.newCall(request("/auth/v1/verify", body)).execute().use { response ->

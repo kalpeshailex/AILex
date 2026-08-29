@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import com.example.ailex.core.common.UiState
 import com.example.ailex.domain.incident.Incident
 import com.example.ailex.ui.components.AilexCard
 import com.example.ailex.ui.components.AilexFilterChip
+import com.example.ailex.ui.components.ErrorState
 import com.example.ailex.ui.components.IconTile
 import com.example.ailex.ui.components.StatusPill
 import com.example.ailex.ui.components.TagChip
@@ -167,22 +169,39 @@ fun IncidentListScreen(
             Text(text = resultCountText, style = TextStyle(fontSize = 12.sp), color = Ink400, modifier = Modifier.padding(bottom = 9.dp))
         }
 
-        val incidents = (state as? UiState.Success)?.data.orEmpty()
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(9.dp)
-        ) {
-            if (incidents.isEmpty()) {
-                item { EmptyIncidents() }
-            } else {
-                items(incidents, key = { it.id }) { incident ->
-                    IncidentRow(incident = incident, onClick = { onIncidentClick(incident.id) })
+        when (val current = state) {
+            is UiState.Loading -> {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
-            item { StorageNote(modifier = Modifier.padding(top = 7.dp)) }
+            is UiState.Error -> {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ErrorState(message = current.message, onRetry = viewModel::retry)
+                }
+            }
+            else -> {
+                val incidents = (current as? UiState.Success)?.data.orEmpty()
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    if (incidents.isEmpty()) {
+                        item { EmptyIncidents() }
+                    } else {
+                        items(incidents, key = { it.id }) { incident ->
+                            IncidentRow(incident = incident, onClick = { onIncidentClick(incident.id) })
+                        }
+                    }
+                    item { StorageNote(modifier = Modifier.padding(top = 7.dp)) }
+                }
+            }
         }
     }
 }

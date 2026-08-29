@@ -16,28 +16,28 @@ It is a plain Markdown file, not referenced by any Gradle module, resource, or s
 Mumbai Legal Rights AI ("Ailex") — a **local-only** native Android app for everyday legal situations in Mumbai (police stops, traffic challans, railway/Mumbai Local issues, government services, cyber incidents). Kotlin + Jetpack Compose + Material 3, package `com.example.ailex`.
 
 - 8 feature packages, 24 navigable routes, ~21 shared UI components — the full design_handoff_ailex_v1 rebuild (24 screens) is now complete; the design.md-era component/token generation has been fully retired
-- The Android app now has **real authentication** (Supabase Auth, email OTP — see Auth, below) but everything else (incidents, notifications, profile data) is still in-memory UI with no AI model. A separate `backend/` Cloudflare Worker + Supabase project was added 2026-08-28 (see below) but is **not yet wired to the app** for data.
+- The Android app has **real authentication** (Supabase Auth, email OTP — see Auth, below) with a **persisted session** (survives app restart/process death), and **Incidents** are backed by the Cloudflare Worker + Supabase (see Backend, below). Notifications and profile preferences (theme, text size, voice) are still in-memory UI with no AI model.
 - minSdk 24 / targetSdk 36, Compose BOM 2024.09.00, Kotlin 2.0.21, Navigation Compose 2.8.5
 
 ### Auth (real, 2026-08-29 → )
 
 The Welcome screen offers two sign-in methods, both against Supabase Auth directly (no SMS/email provider config lives in the app):
 
-- **Email OTP — working end-to-end**, verified on-device. Welcome → "Continue with email" → `EmailScreen` → `AuthViewModel.sendCode()` calls `SupabaseAuthApi.sendEmailOtp()` (plain OkHttp + `org.json` against `POST /auth/v1/otp` — no Supabase SDK; see `core/network/SupabaseAuthApi.kt` for why) → user receives a code by email → `OtpScreen` → `verifyCode()` → `POST /auth/v1/verify` → session (access token + user id) stored in `AppViewModel.state.accessToken`.
+- **Email OTP — working end-to-end**, verified on-device. Welcome → "Continue with email" → `EmailScreen` → `AuthViewModel.sendCode()` calls `SupabaseAuthApi.sendEmailOtp()` (plain OkHttp + `org.json` against `POST /auth/v1/otp` — no Supabase SDK; see `core/network/SupabaseAuthApi.kt` for why) → user receives a code by email → `OtpScreen` → `verifyCode()` → `POST /auth/v1/verify` → session (access + refresh token, user id) stored via `AppViewModel.setSession()`.
 - **Phone OTP — UI exists, not functional**: same code path (`sendPhoneOtp`/`verifyPhoneOtp`), but the Supabase project has no SMS provider configured, so it fails with a real (not fabricated) "unsupported phone provider" error surfaced from `AuthFormState.errorMessage`. Will start working the moment an SMS provider (Twilio/MessageBird/Vonage) is added in Supabase — no app changes needed.
 - **OTP length is project-configurable, not hardcoded**: this Supabase project sends 8-character codes (not Supabase's historical 6-digit default), so the app reads a single `OtpLength` constant (`features/auth/AuthViewModel.kt`) used everywhere — the OTP screen's box count, input truncation, and validation. If the Supabase project's OTP length setting changes, update that one constant.
 - Getting real delivery working end-to-end required two Supabase-side configuration steps beyond the app code, both one-time dashboard settings: (1) custom SMTP (Resend) — Supabase's dashboard won't let you edit an email template's raw HTML source without one configured, and its default shared mailer is unreliable for real use; (2) editing the "Confirm signup" and "Magic Link" email templates to include `{{ .Token }}` — Supabase's default templates only show a `{{ .ConfirmationURL }}` link, not the bare code the app's OTP screen expects.
-- **Not done**: session persistence (the access token is in-memory only, same as everything else — lost on process death, no refresh-token flow yet), and the Worker backend (below) still isn't wired to use this session for the data API.
+- **Session persistence (2026-08-29)**: `core/network/SessionStore.kt` (plain `SharedPreferences`, not encrypted — see Known limitations) persists the Supabase refresh token plus the onboarding profile fields (name, masked contact, language). On cold start, `AppViewModel.restoreSession()` exchanges the stored refresh token for a fresh access token (`SupabaseAuthApi.refreshSession()`, `POST /auth/v1/token?grant_type=refresh_token`) before the UI picks a start destination — `AilexApp` shows a brief loading spinner while this resolves, then starts at `Home` if it succeeded or `auth/welcome` if there was no stored session or the refresh failed (e.g. a revoked/expired refresh token, which also clears the stored one). Log out and Delete my data both clear the store via the existing `AppViewModel.clearSession()`.
+- **Not done**: no proactive re-refresh mid-session — if the access token expires while the app stays open (Supabase's default is ~1 hour), API calls will start failing with 401 until the next cold start re-triggers `restoreSession()`; there's no interceptor yet that catches a 401 and retries with a refreshed token.
 
 ### Backend (in progress, 2026-08-28 → )
 
 A `backend/` Cloudflare Worker (Hono + `@supabase/supabase-js`, TypeScript) was added at the user's explicit request, overriding the local-only constraint below. Full setup/architecture in `backend/README.md`. Status:
 
-- ✅ Worker scaffolded: `/health` (public), `/incidents`, `/profile`, `/notifications` (all require `Authorization: Bearer <supabase access token>`). Every DB query runs through Postgres RLS as the calling user — the Worker never holds a service-role key.
-- ✅ `backend/schema.sql` — Postgres tables (`incidents`, `profiles`, `notifications`) + RLS policies, ready to run in Supabase's SQL editor.
-- ✅ Locally verified: `npm install`, `tsc --noEmit`, `wrangler deploy --dry-run`, and `wrangler dev` all succeed; `GET /health` → `200 {"ok":true}`, `GET /incidents` without a token → `401`.
-- ⬜ Not deployed yet — needs the user's own `wrangler login` + Supabase URL/anon key (`wrangler secret put`) + running `schema.sql` + enabling Supabase's Phone auth provider with an SMS provider (Twilio/MessageBird/Vonage).
-- ⬜ Android app not wired up yet — no Supabase Auth client, no HTTP client calling this Worker. `AuthViewModel`, `IncidentsViewModel`, `NotificationsViewModel`, `AppViewModel` are all still pure in-memory `StateFlow`s. This is the next step once the Worker is deployed and confirmed reachable.
+- ✅ Worker scaffolded and **deployed** at `https://ailex-api.kalpesh-ailex.workers.dev`: `/health` (public), `/incidents`, `/profile`, `/notifications` (all require `Authorization: Bearer <supabase access token>`). Every DB query runs through Postgres RLS as the calling user — the Worker never holds a service-role key.
+- ✅ `backend/schema.sql` run against the live Supabase project — `incidents`, `profiles`, `notifications` tables + RLS policies exist.
+- ✅ **`IncidentsViewModel` is wired up** (2026-08-29, see changelog) — real GET/POST/PATCH/DELETE against `/incidents` via the new `core/network/IncidentsApi.kt`, replacing the old seeded in-memory list. Verified end-to-end on-device including surviving a full app restart.
+- ⬜ `NotificationsViewModel` and the rest of `AppViewModel`'s profile/preference state (`/profile`, `/notifications` endpoints exist server-side) are still pure in-memory `StateFlow`s — not yet wired up.
 
 ### Hard constraints (see CLAUDE.md — two of these are being deliberately relaxed; re-verify the rest after every change)
 
@@ -47,7 +47,7 @@ A `backend/` Cloudflare Worker (Hono + `@supabase/supabase-js`, TypeScript) was 
 - No OCR, no continuous background voice capture — the mic control is a purely visual state machine.
 - No fabricated legal content, citations, phone numbers, or URLs anywhere. See "Content safety" below.
 - No business logic in Compose UI — screens are dumb renderers over `ViewModel`s exposing `StateFlow<UiState<T>>`.
-- All state is in-memory only (no DataStore/Room yet) — resets on process death. (Will change once the backend is wired up.)
+- Most state is still in-memory only (no DataStore/Room). The auth session (`SessionStore`, plain `SharedPreferences`) and Incidents (Cloudflare Worker + Supabase) are now the two exceptions — see Auth and Backend, above. Notifications and profile/app preferences (theme, text size, voice) still reset on process death.
 
 ### Architecture
 
@@ -146,13 +146,36 @@ Never fabricated, anywhere: legal advice/citations/statute text, phone numbers/s
 
 ### Known limitations (deliberate, not oversights)
 
-- **Persistence**: no DataStore/Room yet — all state is in-memory, resets on process death (Delete my data's "removed from this device" claim is accurate today, but so is "lost on process death," which is a limitation, not a feature, until real persistence exists).
+- **Persistence is now split, not uniform**: the auth session and Incidents survive process death (see Auth and Backend, above); Notifications and profile/app preferences (theme, text size, voice) do not yet — no DataStore/Room for those. Delete my data's "removed from this device" claim covers the local UI state; incidents are also deleted server-side (`clearAll()` calls `DELETE /incidents/{id}` for each).
+- **Session refresh token is stored unencrypted**: `SessionStore` uses plain `SharedPreferences`, not `EncryptedSharedPreferences` — a deliberate call to avoid adding a new dependency (`androidx.security:security-crypto` is still alpha and pulls in Tink) given this project's history of Kotlin-toolchain/dependency-version pain (see Auth's OkHttp note). Acceptable for a prototype; worth revisiting before any real release.
+- **No mid-session token refresh**: if the app stays open past the access token's ~1 hour lifetime, Worker calls will start failing with 401 until the next cold start. No 401-triggered refresh-and-retry interceptor yet.
 - **Dark theme**: Light and System currently render the same palette; source spec only publishes light values and gates dark mode on being fully tested.
 - **Voice preferences and Export my incidents** (Me tab, Stage 8): the current SETTINGS content has no dedicated screen for either — both are stub rows that show a toast ("...isn't available in this preview") rather than a fabricated settings UI with no real effect behind it.
 
 ---
 
 ## Changelog
+
+### 2026-08-29 — Session persistence: signed-in state now survives app restart
+User reported that closing the app after signing in with email logged them out again — every session was in-memory only, so a process death (or even the OS just killing the backgrounded app) meant signing in from scratch each time.
+
+- **New `core/network/SessionStore.kt`**: wraps a private `SharedPreferences` file and persists the Supabase **refresh token** (never the short-lived access token) plus the profile fields collected during onboarding (name, masked mobile/email, language) — enough to fully restore `AppSessionState` without re-asking the user anything.
+- **New `SupabaseAuthApi.refreshSession()`**: `POST /auth/v1/token?grant_type=refresh_token`, exchanging a stored refresh token for a fresh access+refresh pair. Supabase may rotate the refresh token on every use, so the store's copy is updated after every successful refresh.
+- **`AppViewModel` is now an `AndroidViewModel`** (needs `Application` for `SessionStore`'s `SharedPreferences`) and gained `restoreSession()`, run once from `init`: loads the stored session (if any), calls `refreshSession()`, and either restores `AppSessionState` + `SessionTokenHolder` on success or clears the store on failure (revoked/expired refresh token — falls back to signed-out, not a crash). Exposes `sessionRestoreComplete: StateFlow<Boolean>` so the UI can wait for this network round-trip before picking a start screen.
+- **`AilexApp.kt`** now shows a brief centered spinner until `sessionRestoreComplete`, then computes the nav graph's start destination (`Routes.Home.ROOT` if a session was restored, `Routes.Auth.GRAPH` otherwise) — `AilexNavHost` gained a `startDestination` parameter instead of hardcoding the auth graph.
+- **`AppViewModel.setSession()`** now takes the full `SupabaseSession` (was just the access token) so it can persist the refresh token via `sessionStore.save(...)`; `clearSession()` (used by both Log out and Delete my data) now also calls `sessionStore.clear()`.
+- Verified end-to-end on a physical device: signed in with email → reached Home → `adb shell am force-stop` + relaunch → app opened directly to Home (no Welcome screen, no re-verification) → Incidents tab still showed the previously-saved "UPI fraud" incidents, confirming both this fix and the earlier Incidents-backend wiring (see below) survive a genuine cold start. No crashes in logcat.
+- **Not done**: mid-session token refresh (see Known limitations) — this pass only covers the cold-start case the user reported.
+
+### 2026-08-29 — Incidents tab wired up to the Cloudflare Worker backend
+Connected `IncidentsViewModel` to the Worker + Supabase backend scaffolded 2026-08-28 (previously built but never called from the app) — incidents are now genuinely persisted per-user, not a hardcoded in-memory seed list. This entry was written retroactively alongside the session-persistence fix above, which is what surfaced the need to verify this wiring survives a restart.
+
+- **New `core/network/IncidentsApi.kt`**: plain OkHttp + `org.json` (matching `SupabaseAuthApi`'s style) for `GET/POST/PATCH/DELETE /incidents`, every call carrying the caller's Supabase access token so Postgres RLS scopes results to that user. Full JSON mapping both ways for `Incident` (snake_case fields matching `backend/schema.sql`: `key_facts`, `timeline`, `evidence`, `complaint_edits`, etc.).
+- **New `core/network/SessionTokenHolder.kt`**: a plain `object` holding the current access token as a `StateFlow<String?>`, written only by `AppViewModel`. Lets `IncidentsViewModel` (a plain `ViewModel`, not Compose-aware) reactively fetch on sign-in and clear on sign-out without a direct dependency on `AppViewModel`.
+- **`IncidentsViewModel` rewritten**: seeded in-memory list replaced with `IncidentsApi.list()` fetched reactively whenever `SessionTokenHolder.accessToken` changes; `addIncident`/`updateNotes`/`addTimelineEvent`/`updateComplaintSection`/`resetComplaintEdits`/`deleteIncident`/`clearAll` all call through to the Worker. Writes are **optimistic** (local state updates immediately, network call fires in the background) — a failed write is not retried or rolled back yet. Added a `retry()` for the initial load and a `UiState.Loading`/`Error` path in `IncidentListScreen` (previously any non-Success state just rendered as empty).
+- **Backend deployed** for the first time this session: `wrangler login`, `wrangler secret put` for `SUPABASE_URL`/`SUPABASE_ANON_KEY`, `wrangler deploy` → live at `https://ailex-api.kalpesh-ailex.workers.dev`; `backend/schema.sql` run against the Supabase project.
+- Verified end-to-end on-device: fresh sign-in showed a genuinely empty Incidents tab (empty Supabase table, not a fake empty state), "Save this situation" from the UPI-fraud demo conversation created a real row (toast + appeared in the list), and — combined with the session-persistence fix above — the saved incident was still there after a full force-stop/relaunch cycle.
+- **Not done**: Notifications and profile/preferences remain in-memory (see Current State → Backend); no retry/rollback on a failed optimistic write.
 
 ### 2026-08-29 — Real email OTP authentication (Supabase Auth), wired into the app
 User asked for real auth with an email option (they don't have an SMS provider set up), replacing the fake shape-only OTP validation for at least one path. Both phone and email are now offered on Welcome; only email actually delivers a code today.

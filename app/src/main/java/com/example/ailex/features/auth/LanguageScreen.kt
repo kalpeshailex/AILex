@@ -115,7 +115,7 @@ fun LanguageScreen(
                 } else {
                     appViewModel.setMobileNumber(state.mobileNumber)
                 }
-                state.session?.let { appViewModel.setSession(it.accessToken) }
+                state.session?.let { appViewModel.setSession(it) }
                 onFinish()
             }
         )

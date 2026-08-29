@@ -1,10 +1,17 @@
 package com.example.ailex.core.common
 
+import android.app.Application
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.ailex.core.network.SessionStore
+import com.example.ailex.core.network.SessionTokenHolder
+import com.example.ailex.core.network.SupabaseAuthApi
+import com.example.ailex.core.network.SupabaseSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 enum class AppLanguage(val displayName: String, val nativeLabel: String) {
     ENGLISH("English", "Recommended for this release"),
@@ -32,13 +39,54 @@ data class AppSessionState(
 )
 
 /**
- * Activity-scoped, in-memory only (no DataStore/Room yet — see design.md
- * build plan). Holds the user's local profile and app preferences so they
- * are set once and read from anywhere via [LocalAppViewModel].
+ * Activity-scoped. Holds the user's local profile and app preferences so
+ * they are set once and read from anywhere via [LocalAppViewModel].
+ *
+ * The verified session survives process death: [SessionStore] persists the
+ * Supabase refresh token (never the short-lived access token) plus the
+ * onboarding profile fields, and [restoreSession] exchanges it for a fresh
+ * access token on every cold start — see [sessionRestoreComplete].
  */
-class AppViewModel : ViewModel() {
+class AppViewModel(application: Application) : AndroidViewModel(application) {
+    private val sessionStore = SessionStore(application)
+
     private val _state = MutableStateFlow(AppSessionState())
     val state: StateFlow<AppSessionState> = _state.asStateFlow()
+
+    /** False until the startup session-restore attempt (network refresh) finishes. */
+    private val _sessionRestoreComplete = MutableStateFlow(false)
+    val sessionRestoreComplete: StateFlow<Boolean> = _sessionRestoreComplete.asStateFlow()
+
+    init {
+        restoreSession()
+    }
+
+    private fun restoreSession() {
+        val stored = sessionStore.load()
+        if (stored == null) {
+            _sessionRestoreComplete.value = true
+            return
+        }
+        viewModelScope.launch {
+            SupabaseAuthApi.refreshSession(stored.refreshToken)
+                .onSuccess { session ->
+                    sessionStore.updateRefreshToken(session.refreshToken)
+                    _state.value = _state.value.copy(
+                        displayName = stored.displayName,
+                        maskedMobile = stored.maskedMobile,
+                        maskedEmail = stored.maskedEmail,
+                        language = stored.language,
+                        accessToken = session.accessToken
+                    )
+                    SessionTokenHolder.set(session.accessToken)
+                }
+                .onFailure {
+                    // Refresh token expired or revoked — fall back to signed-out.
+                    sessionStore.clear()
+                }
+            _sessionRestoreComplete.value = true
+        }
+    }
 
     fun setMobileNumber(rawNumber: String) {
         val masked = if (rawNumber.length >= 4) {
@@ -60,9 +108,17 @@ class AppViewModel : ViewModel() {
         _state.value = _state.value.copy(maskedEmail = masked)
     }
 
-    /** The access token from a just-verified Supabase Auth session (see SupabaseAuthApi). */
-    fun setSession(accessToken: String) {
-        _state.value = _state.value.copy(accessToken = accessToken)
+    /** A just-verified Supabase Auth session (see SupabaseAuthApi) — persisted so it survives app restarts. */
+    fun setSession(session: SupabaseSession) {
+        _state.value = _state.value.copy(accessToken = session.accessToken)
+        SessionTokenHolder.set(session.accessToken)
+        sessionStore.save(
+            refreshToken = session.refreshToken,
+            displayName = _state.value.displayName,
+            maskedMobile = _state.value.maskedMobile,
+            maskedEmail = _state.value.maskedEmail,
+            language = _state.value.language
+        )
     }
 
     fun setUserProfile(name: String, language: AppLanguage) {
@@ -93,9 +149,11 @@ class AppViewModel : ViewModel() {
         _state.value = _state.value.copy(remindersEnabled = enabled)
     }
 
-    /** Wipes the local profile back to a fresh, signed-out state — used by Delete my data. */
+    /** Wipes the local profile back to a fresh, signed-out state — used by Log out and Delete my data. */
     fun clearSession() {
         _state.value = AppSessionState()
+        SessionTokenHolder.set(null)
+        sessionStore.clear()
     }
 }
 

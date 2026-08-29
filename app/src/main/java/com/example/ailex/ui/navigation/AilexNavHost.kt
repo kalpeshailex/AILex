@@ -48,11 +48,12 @@ import com.example.ailex.features.settings.PrivacyScreen
 @Composable
 fun AilexNavHost(
     navController: NavHostController,
+    startDestination: String = Routes.Auth.GRAPH,
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.Auth.GRAPH,
+        startDestination = startDestination,
         modifier = modifier
     ) {
         navigation(startDestination = Routes.Auth.WELCOME, route = Routes.Auth.GRAPH) {
