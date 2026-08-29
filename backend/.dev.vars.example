@@ -1,2 +1,11 @@
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-public-key
+
+# AI pipeline (see src/orchestrator, 06_AI_ARCHITECTURE.md). GEMINI_API_KEY
+# is a secret -- get one from https://aistudio.google.com/apikey and never
+# commit a real value. The rest are plain config with sensible defaults if
+# omitted (see src/config/env.ts).
+GEMINI_API_KEY=your-gemini-api-key
+AI_PROVIDER=gemini
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001

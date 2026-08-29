@@ -3,6 +3,14 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 export interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  // AI pipeline bindings (see src/config/env.ts). GEMINI_API_KEY is a secret
+  // (`wrangler secret put GEMINI_API_KEY`) — never committed, never logged,
+  // never returned in a response. The rest are plain, non-secret config and
+  // may live in wrangler.toml's [vars].
+  GEMINI_API_KEY?: string;
+  AI_PROVIDER?: string;
+  GEMINI_MODEL?: string;
+  GEMINI_EMBEDDING_MODEL?: string;
 }
 
 /**

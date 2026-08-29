@@ -3,8 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
 # Non-secret config can live here and be committed.
-# Secrets (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) must NOT go here —
-# set them with `wrangler secret put <NAME>` instead. See README.md.
+# Secrets (SUPABASE_URL, SUPABASE_ANON_KEY, GEMINI_API_KEY) must NOT go
+# here — set them with `wrangler secret put <NAME>` instead. See README.md.
+
+[vars]
+AI_PROVIDER = "gemini"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
+GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
 
 [observability]
 enabled = true

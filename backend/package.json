@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -14,6 +15,7 @@
   "devDependencies": {
     "wrangler": "^4.0.0",
     "typescript": "^5.6.3",
-    "@cloudflare/workers-types": "^5.20260828.1"
+    "@cloudflare/workers-types": "^5.20260828.1",
+    "vitest": "^2.1.9"
   }
 }
